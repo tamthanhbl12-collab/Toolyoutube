@@ -1,0 +1,20 @@
+{
+  "name": "Kho Kiến Thức Chăn Nuôi",
+  "short_name": "Chăn Nuôi AI",
+  "description": "Hệ thống kiến thức chăn nuôi từ YouTube và Facebook",
+  "start_url": "/Toolyoutube/",
+  "scope": "/Toolyoutube/",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "background_color": "#1b4332",
+  "theme_color": "#1b4332",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%231b4332'/><rect x='8' y='8' width='84' height='84' rx='16' fill='%2340916c'/><text y='68' x='50' text-anchor='middle' font-size='52'>🐄</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"]
+}
