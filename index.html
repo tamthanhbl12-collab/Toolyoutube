@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<!-- PWA -->
+
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chăn Nuôi AI">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2e1f0e">
+
+<title>Kho Kiến Thức Chăn Nuôi</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --soil: #2e1f0e;
+  --clay: #7a4f3a;
+  --straw: #d4a853;
+  --grass: #3d7a52;
+  --sky: #e8f4ee;
+  --cream: #fdf6ec;
+  --ink: #1a1208;
+  --mist: #f2ebe0;
+  --rust: #c0392b;
+  --drug: #6c3d8a;
+  --drug-light: #f3eaf9;
+  --warn: #e67e22;
+  --warn-light: #fff4e6;
+  --fb: #1877f2;
+  --fb-light: #e7f0fd;
+  /* Safe area for iPhone notch/home bar */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Noto Serif', Georgia, serif;
+  background: var(--cream);
+  color: var(--ink);
+  /* Full screen including safe areas */
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+  display: flex;
+  flex-direction: column;
+}
+
+/* HEADER */
+header {
+background: var(–soil);
+padding: 12px 16px;
+display: flex; align-items: center; gap: 10px;
+border-bottom: 3px solid var(–straw);
+flex-shrink: 0;
+}
+header .icon { font-size: 24px; }
+header h1 { font-family: ‘Playfair Display’, serif; font-size: 15px; font-weight: 900; color: var(–straw); line-height: 1.2; }
+header p { font-family: ‘IBM Plex Mono’, monospace; font-size: 8px; color: rgba(212,168,83,0.55); letter-spacing: 1px; }
+
+/* APP SHELL - fill remaining height */
+.app-shell { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* LAYOUT */
+.layout { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar { background: var(–mist); border-bottom: 2px solid #d9c9b5; flex-shrink: 0; }
+.sidebar-block { padding: 8px 14px; border-bottom: 1px solid #d9c9b5; }
+.label { font-family: ‘IBM Plex Mono’, monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(–clay); margin-bottom: 6px; font-weight: 500; }
+
+.add-ch-toggle {
+display: flex; align-items: center; justify-content: space-between;
+padding: 10px 14px; cursor: pointer;
+background: var(–mist); border-bottom: 1px solid #d9c9b5;
+}
+.add-ch-toggle span { font-family: ‘IBM Plex Mono’, monospace; font-size: 11px; color: var(–clay); font-weight: 500; }
+.add-ch-form { padding: 12px 14px; display: none; background: white; border-bottom: 1px solid #d9c9b5; }
+.add-ch-form.open { display: block; }
+
+/* Channel chips */
+.ch-list { display: flex; flex-direction: row; gap: 8px; padding: 8px 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; }
+.ch-list::-webkit-scrollbar { display: none; }
+.ch-item { background: white; border: 1.5px solid #d9c9b5; border-radius: 20px; padding: 5px 12px; cursor: pointer; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 4px; }
+.ch-item:hover, .ch-item.active { border-color: var(–grass); background: var(–sky); }
+.ch-name { font-weight: 700; font-size: 12px; color: var(–soil); }
+.ch-del { background: none; border: none; cursor: pointer; font-size: 11px; color: #bbb; padding: 0 2px; }
+.ch-del:hover { color: var(–rust); }
+
+/* INPUTS */
+input[type=text], input[type=password], textarea {
+width: 100%; padding: 10px 12px;
+border: 1.5px solid #c8b89e; border-radius: 8px;
+background: white; font-family: ‘Noto Serif’, serif;
+font-size: 14px; color: var(–ink); outline: none;
+-webkit-appearance: none; transition: border-color 0.15s;
+}
+input:focus, textarea:focus { border-color: var(–grass); }
+textarea { min-height: 110px; resize: vertical; line-height: 1.6; font-size: 13px; }
+
+/* BUTTONS */
+.btn { padding: 9px 14px; border: none; border-radius: 8px; font-family: ‘IBM Plex Mono’, monospace; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 5px; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.btn-green { background: var(–grass); color: white; }
+.btn-green:active { background: #306642; transform: scale(0.97); }
+.btn-dark { background: var(–soil); color: var(–straw); }
+.btn-drug { background: var(–drug); color: white; }
+.btn-outline { background: transparent; color: var(–clay); border: 1.5px solid #c8b89e; }
+.btn-danger { background: transparent; color: var(–rust); border: 1px solid var(–rust); }
+.btn-danger:active { background: var(–rust); color: white; }
+.btn-sm { padding: 6px 11px; font-size: 11px; }
+.btn-xs { padding: 4px 8px; font-size: 10px; }
+.btn-block { width: 100%; }
+
+/* TABS */
+.tabs { display: flex; background: white; border-bottom: 2px solid #d9c9b5; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { padding: 11px 13px; font-family: ‘IBM Plex Mono’, monospace; font-size: 11px; font-weight: 500; color: var(–clay); cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.15s; flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.tab.active { color: var(–grass); border-bottom-color: var(–grass); }
+.badge { display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; background: var(–straw); color: var(–soil); border-radius: 50%; font-size: 9px; font-weight: 700; margin-left: 3px; }
+.badge.drug { background: var(–drug); color: white; }
+
+/* SCROLLABLE CONTENT */
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.tab-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; }
+
+/* VIDEO GRID */
+.video-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+@media (min-width: 600px) { .video-grid { grid-template-columns: repeat(2,1fr); } }
+
+.video-card { background: white; border: 1.5px solid #d9c9b5; border-radius: 10px; overflow: hidden; }
+.v-thumb { width: 100%; aspect-ratio: 16/9; background: #1a1208; overflow: hidden; }
+.v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.v-body { padding: 10px 12px; }
+.v-title { font-weight: 700; font-size: 13px; color: var(–soil); line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.v-date { font-family: ‘IBM Plex Mono’, monospace; font-size: 10px; color: var(–clay); margin-bottom: 8px; }
+.v-actions { display: flex; gap: 6px; }
+
+/* SOURCE TABS */
+.source-tabs { display: flex; gap: 0; margin-bottom: 12px; border-radius: 8px; overflow: hidden; border: 1.5px solid #c8b89e; }
+.source-tab { flex: 1; padding: 10px 6px; text-align: center; cursor: pointer; font-family: ‘IBM Plex Mono’, monospace; font-size: 11px; font-weight: 500; background: white; color: var(–clay); border-right: 1px solid #c8b89e; -webkit-tap-highlight-color: transparent; }
+.source-tab:last-child { border-right: none; }
+.source-tab.active-yt { background: var(–grass); color: white; }
+.source-tab.active-fb { background: var(–fb); color: white; }
+.source-tab.active-other { background: var(–soil); color: var(–straw); }
+
+/* NOTICE */
+.notice { background: #fff8e1; border: 1px solid var(–straw); border-radius: 8px; padding: 10px 13px; font-size: 12px; line-height: 1.6; color: #5a4000; margin-bottom: 12px; }
+.notice-fb { background: var(–fb-light); border-color: var(–fb); color: #0a3d8f; }
+.input-panel { background: white; border: 1.5px solid #d9c9b5; border-radius: 10px; padding: 13px; margin-bottom: 12px; }
+.input-panel h3 { font-family: ‘Playfair Display’, serif; font-size: 14px; color: var(–soil); margin-bottom: 3px; }
+.hint { font-size: 11.5px; color: var(–clay); font-style: italic; line-height: 1.5; margin-bottom: 10px; }
+.field-gap { margin-bottom: 8px; }
+
+/* RESULT */
+.result-container { display: flex; flex-direction: column; gap: 12px; }
+.result-section { background: white; border-radius: 10px; overflow: hidden; border: 1.5px solid #d9c9b5; }
+.result-section-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #e8dccf; }
+.section-icon { font-size: 18px; }
+.section-title { font-family: ‘Playfair Display’, serif; font-size: 14px; font-weight: 700; color: var(–soil); flex: 1; }
+.result-section-body { padding: 12px 14px; font-size: 13px; line-height: 1.8; }
+.result-section-body ul { padding-left: 16px; }
+.result-section-body li { margin-bottom: 3px; }
+.result-section-body strong { color: var(–soil); }
+.result-section-body p { margin-bottom: 6px; }
+
+/* DRUG CARD */
+.drug-card { background: var(–drug-light); border: 1.5px solid #c9a8e0; border-radius: 8px; padding: 12px 13px; margin-bottom: 10px; }
+.drug-card.drug-warn { background: var(–warn-light); border-color: #f0a060; }
+.drug-card-name { font-family: ‘IBM Plex Mono’, monospace; font-size: 13px; font-weight: 500; color: var(–drug); margin-bottom: 5px; }
+.drug-card.drug-warn .drug-card-name { color: var(–warn); }
+.drug-card-info { font-size: 12.5px; line-height: 1.7; }
+.drug-card-info strong { color: var(–soil); }
+.drug-tag { display: inline-block; padding: 2px 7px; border-radius: 12px; font-family: ‘IBM Plex Mono’, monospace; font-size: 10px; margin: 2px 2px 2px 0; background: #e0d0f5; color: var(–drug); }
+
+/* TIMELINE */
+.timeline { position: relative; padding-left: 20px; }
+.timeline::before { content: ‘’; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(–grass); opacity: 0.3; }
+.tl-item { position: relative; margin-bottom: 12px; }
+.tl-dot { position: absolute; left: -17px; top: 4px; width: 10px; height: 10px; background: var(–grass); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px var(–grass); }
+.tl-head { font-weight: 700; font-size: 13px; color: var(–soil); margin-bottom: 2px; }
+.tl-body { font-size: 12.5px; color: #3a2a18; line-height: 1.6; }
+
+/* DATA TABLE */
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th { padding: 6px 8px; text-align: left; font-family: ‘IBM Plex Mono’, monospace; font-size: 9px; letter-spacing: 1px; border: 1px solid #e0d4c0; background: var(–mist); color: var(–clay); }
+.data-table td { padding: 6px 8px; border: 1px solid #e0d4c0; vertical-align: top; }
+.data-table tr:nth-child(even) td { background: #fdf8f0; }
+
+/* DRUG DB */
+.drug-db-item { background: white; border: 1.5px solid #c9a8e0; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.drug-db-head { background: var(–drug-light); padding: 9px 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.drug-db-name { font-family: ‘IBM Plex Mono’, monospace; font-size: 13px; font-weight: 500; color: var(–drug); }
+.drug-db-source { font-size: 10px; color: var(–clay); margin-top: 2px; }
+.drug-db-body { padding: 10px 13px; font-size: 12.5px; }
+.drug-db-body table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+.drug-db-body td { padding: 5px 7px; border: 1px solid #e5d9f0; font-size: 11.5px; vertical-align: top; }
+.drug-db-body td:first-child { font-weight: 700; width: 38%; color: var(–clay); }
+.drug-db-body tr:nth-child(even) td { background: #faf5ff; }
+
+/* NOTES */
+.note-card { background: white; border: 1.5px solid #d9c9b5; border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.note-card-head { background: var(–mist); padding: 10px 13px; border-bottom: 1px solid #d9c9b5; display: flex; gap: 8px; align-items: flex-start; }
+.note-card-title { font-weight: 700; font-size: 13px; color: var(–soil); flex: 1; line-height: 1.4; }
+.note-card-meta { font-family: ‘IBM Plex Mono’, monospace; font-size: 10px; color: var(–clay); margin-top: 3px; }
+.note-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-family: ‘IBM Plex Mono’, monospace; font-size: 10px; background: var(–sky); color: var(–grass); border: 1px solid var(–grass); margin-right: 3px; margin-top: 3px; }
+.note-tag.fb { background: var(–fb-light); color: var(–fb); border-color: var(–fb); }
+.note-body { padding: 10px 13px; font-size: 12.5px; line-height: 1.7; max-height: 150px; overflow: hidden; position: relative; }
+.note-body::after { content: ‘’; position: absolute; bottom: 0; left: 0; right: 0; height: 35px; background: linear-gradient(transparent, white); }
+.note-body.expanded { max-height: none; }
+.note-body.expanded::after { display: none; }
+.note-footer { padding: 8px 13px; border-top: 1px solid #f0e8dc; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+/* EMPTY / LOADING */
+.empty { text-align: center; padding: 40px 16px; color: var(–clay); }
+.empty .e-icon { font-size: 36px; margin-bottom: 12px; }
+.empty h3 { font-family: ‘Playfair Display’, serif; font-size: 16px; margin-bottom: 6px; color: var(–soil); }
+.empty p { font-size: 12.5px; line-height: 1.6; max-width: 260px; margin: 0 auto; }
+.dots { display: inline-flex; gap: 4px; align-items: center; }
+.dots span { width: 6px; height: 6px; background: var(–grass); border-radius: 50%; animation: jump 1s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes jump { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+/* STATUS BAR */
+.statusbar { background: var(–soil); color: var(–straw); font-family: ‘IBM Plex Mono’, monospace; font-size: 10px; padding: 5px 14px; flex-shrink: 0; }
+
+/* SEARCH */
+.search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-row input { flex: 1; }
+
+/* SECTION COLORS */
+.sec-process .result-section-head { background: var(–sky); }
+.sec-feed .result-section-head { background: #fdf5e0; }
+.sec-drug .result-section-head { background: var(–drug-light); }
+.sec-warn .result-section-head { background: var(–warn-light); }
+.sec-apply .result-section-head { background: #e8f4ee; }
+
+/* DESKTOP */
+@media (min-width: 768px) {
+.layout { flex-direction: row; }
+.sidebar { width: 280px; min-width: 280px; border-bottom: none; border-right: 2px solid #d9c9b5; display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+.ch-list { flex-direction: column; overflow-x: hidden; overflow-y: auto; flex: 1; }
+.ch-item { border-radius: 7px; }
+.add-ch-toggle { display: none; }
+.add-ch-form { display: block !important; }
+.main { flex: 1; overflow: hidden; }
+}
+
+/* PWA SPLASH */
+#splash {
+position: fixed; inset: 0; z-index: 9999;
+background: var(–soil);
+display: flex; flex-direction: column;
+align-items: center; justify-content: center;
+gap: 16px;
+transition: opacity 0.5s ease;
+}
+#splash .sp-icon { font-size: 72px; animation: pulse 1.5s infinite; }
+#splash h2 { font-family: ‘Playfair Display’, serif; font-size: 22px; color: var(–straw); text-align: center; }
+#splash p { font-family: ‘IBM Plex Mono’, monospace; font-size: 11px; color: rgba(212,168,83,0.5); letter-spacing: 2px; }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+</style>
+
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+
+<div id="splash">
+  <div class="sp-icon">🐄</div>
+  <h2>Kho Kiến Thức Chăn Nuôi</h2>
+  <p>ĐANG KHỞI ĐỘNG...</p>
+</div>
+
+<div class="app-shell">
+  <header>
+    <div class="icon">🐄</div>
+    <div>
+      <h1>Kho Kiến Thức Chăn Nuôi</h1>
+      <p>YOUTUBE · FACEBOOK · THÚ Y · KHO THUỐC</p>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="add-ch-toggle" onclick="toggleAddForm()">
+        <span>➕ THÊM KÊNH YOUTUBE</span>
+        <span id="addToggleIcon">▼</span>
+      </div>
+      <div class="add-ch-form" id="addChForm">
+        <div class="field-gap"><input type="text" id="chUrl" placeholder="Link kênh / @tên kênh / UCxxxxx" /></div>
+        <div class="field-gap"><input type="text" id="chNick" placeholder="Tên gợi nhớ" /></div>
+        <button class="btn btn-green btn-block" onclick="addChannel()">🌿 Thêm kênh</button>
+      </div>
+      <div class="sidebar-block"><div class="label">📺 Đang theo dõi</div></div>
+      <div class="ch-list" id="chList"></div>
+    </aside>
+
+```
+<!-- MAIN -->
+<main class="main">
+  <div class="tabs">
+    <div class="tab active" data-tab="feed" onclick="switchTab('feed')">📺 Video mới</div>
+    <div class="tab" data-tab="analyze" onclick="switchTab('analyze')">🤖 Phân tích AI</div>
+    <div class="tab" data-tab="drugs" onclick="switchTab('drugs')">💊 Kho thuốc <span class="badge drug" id="drugCount">0</span></div>
+    <div class="tab" data-tab="notes" onclick="switchTab('notes')">📚 Ghi chú <span class="badge" id="noteCount">0</span></div>
+  </div>
+
+  <!-- FEED -->
+  <div id="tab-feed" class="tab-content">
+    <div id="feedContent">
+      <div class="empty">
+        <div class="e-icon">📺</div>
+        <h3>Chọn một kênh</h3>
+        <p>Thêm link kênh YouTube rồi nhấn vào tên kênh để tải video mới nhất.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYZE -->
+  <div id="tab-analyze" class="tab-content" style="display:none;">
+    <!-- API KEY -->
+    <div id="apiKeyPanel" style="background:#fff8e1;border:1.5px solid #d4a853;border-radius:8px;padding:10px 13px;margin-bottom:12px;display:none;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#7a4f3a;margin-bottom:6px;font-weight:500;">🔑 ANTHROPIC API KEY</div>
+      <div style="display:flex;gap:8px;">
+        <input type="password" id="apiKeyInput" placeholder="sk-ant-..." style="flex:1;font-size:12px;" oninput="saveApiKey()" />
+        <button class="btn btn-dark btn-sm" onclick="toggleApiPanel()">✕</button>
+      </div>
+      <div style="font-size:10px;color:#7a4f3a;margin-top:5px;">Lưu tự động trong máy, không gửi đi đâu.</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+      <button class="btn btn-outline btn-xs" onclick="toggleApiPanel()" id="apiKeyBtn">🔑 API Key</button>
+    </div>
+    <div class="source-tabs">
+      <div class="source-tab active-yt" id="src-yt" onclick="selectSource('yt')">📺 YouTube</div>
+      <div class="source-tab" id="src-fb" onclick="selectSource('fb')">📘 Facebook</div>
+      <div class="source-tab" id="src-other" onclick="selectSource('other')">📄 Khác</div>
+    </div>
+    <div id="notice-yt" class="notice"><strong>📋 Cách lấy phụ đề YouTube:</strong> Mở video → nhấn <strong>⋯ ba chấm</strong> → <strong>"Hiển thị bản ghi"</strong> → bôi đen → Copy → Dán vào đây.</div>
+    <div id="notice-fb" class="notice notice-fb" style="display:none;"><strong>📘 Cách lấy nội dung Facebook:</strong> Mở bài → giữ ngón tay vào chữ → bôi đen → Copy → Dán vào đây.</div>
+    <div id="notice-other" class="notice" style="display:none;"><strong>📄 Dán bất kỳ nội dung nào:</strong> Blog, tài liệu, ghi chú kỹ thuật...</div>
+    <div class="input-panel">
+      <h3 id="inputPanelTitle">✍️ Nội dung video YouTube</h3>
+      <p class="hint" id="inputPanelHint">AI sẽ nhận diện chủ đề, hệ thống quy trình, bảng thức ăn, tra cứu thuốc.</p>
+      <div class="field-gap"><input type="text" id="vTitle" placeholder="Tiêu đề / Tên bài viết (tùy chọn)" /></div>
+      <div class="field-gap" style="display:flex;gap:8px;"><input type="text" id="vUrl" placeholder="Link nguồn (tùy chọn)" style="flex:1;" oninput="toggleOpenBtn()" /><button class="btn btn-dark btn-sm" onclick="openVideoUrl()" id="btnOpenUrl" style="white-space:nowrap;display:none;">▶ Xem</button></div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+        <button class="btn btn-green btn-sm" onclick="fetchTranscript()" style="flex:1;min-width:140px;">📥 Lấy transcript tự động</button>
+        <button class="btn btn-dark btn-sm" onclick="openTactiq()" style="flex:1;min-width:140px;">🌐 Mở tactiq.io</button>
+      </div>
+      <div style="background:var(--fb-light);border:1px solid #90b8f8;border-radius:6px;padding:8px 10px;font-size:11px;color:#0a3d8f;margin-bottom:8px;line-height:1.6;" id="tactiqHint" style="display:none;">
+        <strong>Cách dùng tactiq.io:</strong> Nhấn "Mở tactiq.io" → trang mở với link video sẵn → nhấn <strong>"Get Transcript"</strong> → copy toàn bộ → quay lại dán vào đây.
+      </div>
+      <div class="field-gap"><textarea id="transcript" placeholder="Dán nội dung vào đây..."></textarea></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-green btn-block" onclick="runAnalysis()" style="flex:2;">🤖 Phân tích & Hệ thống hóa</button>
+        <button class="btn btn-outline btn-sm" onclick="clearAll()">Xoá</button>
+      </div>
+    </div>
+    <div id="analysisResult"></div>
+  </div>
+
+  <!-- DRUGS -->
+  <div id="tab-drugs" class="tab-content" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--soil);">💊 Kho Thuốc</div>
+      <button class="btn btn-danger btn-sm" onclick="clearDrugs()">🗑️ Xoá tất cả</button>
+    </div>
+    <div class="search-row"><input type="text" id="drugSearch" placeholder="Tìm thuốc, công dụng, loài vật..." oninput="renderDrugs()" /></div>
+    <div id="drugsContainer"></div>
+  </div>
+
+  <!-- NOTES -->
+  <div id="tab-notes" class="tab-content" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--soil);">📚 Kho Ghi Chú</div>
+      <button class="btn btn-danger btn-sm" onclick="clearNotes()">🗑️ Xoá tất cả</button>
+    </div>
+    <div class="search-row"><input type="text" id="noteSearch" placeholder="Tìm tiêu đề, chủ đề, loài vật..." oninput="renderNotes()" /></div>
+    <div id="notesContainer"></div>
+  </div>
+</main>
+```
+
+  </div>
+
+  <div class="statusbar"><span id="status">✅ Sẵn sàng</span></div>
+</div>
+
+<script>
+// Ẩn splash sau 1.5s
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    s.style.opacity = '0';
+    setTimeout(() => s.remove(), 500);
+  }, 1200);
+});
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// STATE
+let channels = JSON.parse(localStorage.getItem('yt_ch') || '[]');
+let notes    = JSON.parse(localStorage.getItem('yt_notes') || '[]');
+let drugs    = JSON.parse(localStorage.getItem('yt_drugs') || '[]');
+let activeCh = null;
+let pendingNote = null;
+let currentSource = 'yt';
+window._currentDrugs = [];
+
+renderChannels(); renderNotes(); renderDrugs(); updateCounts();
+
+// SOURCE SELECTOR
+function selectSource(src) {
+  currentSource = src;
+  ['yt','fb','other'].forEach(s => {
+    document.getElementById('src-'+s).className = 'source-tab';
+    document.getElementById('notice-'+s).style.display = 'none';
+  });
+  document.getElementById('src-'+src).className = 'source-tab active-'+src;
+  document.getElementById('notice-'+src).style.display = '';
+  const titles = { yt:'✍️ Nội dung video YouTube', fb:'✍️ Nội dung bài viết Facebook', other:'✍️ Dán nội dung bất kỳ' };
+  const hints  = { yt:'AI sẽ nhận diện chủ đề, hệ thống quy trình, bảng thức ăn, tra cứu thuốc.', fb:'AI sẽ tóm tắt bài viết, nhận diện kỹ thuật chăn nuôi, liệt kê thuốc được đề cập.', other:'AI sẽ tự nhận diện chủ đề và hệ thống hóa kiến thức chăn nuôi.' };
+  const phs    = { yt:'Dán transcript/phụ đề YouTube vào đây...', fb:'Dán nội dung bài viết Facebook vào đây...', other:'Dán nội dung từ blog, tài liệu, ghi chú...' };
+  document.getElementById('inputPanelTitle').textContent = titles[src];
+  document.getElementById('inputPanelHint').textContent = hints[src];
+  document.getElementById('transcript').placeholder = phs[src];
+  document.getElementById('vUrl').placeholder = src==='fb' ? 'Link bài viết Facebook (tùy chọn)' : 'Link nguồn (tùy chọn)';
+}
+
+// TOGGLE ADD FORM
+function toggleAddForm() {
+  const form = document.getElementById('addChForm');
+  const icon = document.getElementById('addToggleIcon');
+  form.classList.toggle('open');
+  icon.textContent = form.classList.contains('open') ? '▲' : '▼';
+}
+
+// CHANNELS
+function addChannel() {
+  const url = document.getElementById('chUrl').value.trim();
+  const nick = document.getElementById('chNick').value.trim();
+  if (!url) { setStatus('⚠️ Nhập link kênh trước'); return; }
+  const id = extractChId(url);
+  if (!id) { setStatus('⚠️ Link không hợp lệ'); return; }
+  if (channels.find(c => c.id===id)) { setStatus('⚠️ Kênh đã được thêm'); return; }
+  const ch = { id, url, nickname: nick||url, addedAt: Date.now(), videoCount: 0 };
+  channels.push(ch); saveChannels(); renderChannels();
+  document.getElementById('chUrl').value = '';
+  document.getElementById('chNick').value = '';
+  document.getElementById('addChForm').classList.remove('open');
+  document.getElementById('addToggleIcon').textContent = '▼';
+  setStatus('✅ Đã thêm: ' + ch.nickname);
+  selectCh(ch);
+}
+
+function extractChId(url) {
+  let m = url.match(/@([\w.-]+)/);
+  if (m) return '@'+m[1];
+  m = url.match(/\/channel\/(UC[\w-]+)/);
+  if (m) return m[1];
+  m = url.match(/\/(?:c|user)\/([\w.-]+)/);
+  if (m) return m[1];
+  if (url.length > 3) return url;
+  return null;
+}
+
+function delChannel(id, e) {
+  e.stopPropagation();
+  channels = channels.filter(c => c.id!==id);
+  saveChannels();
+  if (activeCh && activeCh.id===id) { activeCh=null; showFeedEmpty(); }
+  renderChannels(); setStatus('🗑️ Đã xoá kênh');
+}
+
+function renderChannels() {
+  const el = document.getElementById('chList');
+  if (!channels.length) {
+    el.innerHTML = '<div class="empty" style="padding:14px 8px;"><div class="e-icon" style="font-size:22px;">🌱</div><p style="font-size:11px;">Thêm kênh YouTube bên trên</p></div>';
+    return;
+  }
+  el.innerHTML = channels.map(ch => {
+    const chJ = JSON.stringify(ch).replace(/"/g,'&quot;');
+    return `<div class="ch-item ${activeCh&&activeCh.id===ch.id?'active':''}" onclick='selectChByEl(this)' data-ch="${chJ}">
+      <span class="ch-name">📺 ${esc(ch.nickname)}</span>
+      <button class="ch-del" onclick='delChannel("${ch.id}",event)'>✕</button>
+    </div>`;
+  }).join('');
+}
+
+function selectChByEl(el) { selectCh(JSON.parse(el.getAttribute('data-ch'))); }
+function saveChannels() { localStorage.setItem('yt_ch', JSON.stringify(channels)); }
+
+// FEED
+async function selectCh(ch) {
+  activeCh = ch; renderChannels(); switchTab('feed'); loadFeed(ch);
+}
+
+async function loadFeed(ch) {
+  const el = document.getElementById('feedContent');
+  el.innerHTML = '<div class="empty"><div class="e-icon"><div class="dots"><span></span><span></span><span></span></div></div><h3>Đang tải video...</h3></div>';
+  setStatus('⏳ Đang tải: ' + ch.nickname);
+  const id = ch.id;
+  const rssUrl = id.startsWith('UC')
+    ? 'https://www.youtube.com/feeds/videos.xml?channel_id='+id
+    : 'https://www.youtube.com/feeds/videos.xml?user='+id.replace('@','');
+  try {
+    const proxies = [
+      u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+      u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+      u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`
+    ];
+    let xml = null;
+    for (const makeUrl of proxies) {
+      try {
+        const r = await fetch(makeUrl(rssUrl), {signal: AbortSignal.timeout(8000)});
+        if (!r.ok) continue;
+        const ct = r.headers.get('content-type')||'';
+        if (ct.includes('json')) {
+          const j = await r.json();
+          xml = j.contents || j.data || null;
+        } else {
+          xml = await r.text();
+        }
+        if (xml && xml.includes('<entry>')) break;
+        xml = null;
+      } catch { continue; }
+    }
+    if (!xml) { showFeedEmpty(); setStatus('⚠️ Không tải được feed — thử Channel ID dạng UCxxxxx'); return; }
+    const res = { ok: true };
+    const json = { contents: xml };
+    const doc = new DOMParser().parseFromString(json.contents, 'text/xml');
+    const entries = Array.from(doc.querySelectorAll('entry'));
+    if (!entries.length) { showFeedEmpty(); return; }
+    const videos = entries.slice(0,12).map(e => ({
+      id: e.querySelector('videoId')?.textContent||'',
+      title: e.querySelector('title')?.textContent||'Không có tiêu đề',
+      published: e.querySelector('published')?.textContent||'',
+      url: 'https://www.youtube.com/watch?v='+(e.querySelector('videoId')?.textContent||''),
+      thumb: 'https://i.ytimg.com/vi/'+(e.querySelector('videoId')?.textContent||'')+'/mqdefault.jpg'
+    }));
+    const idx = channels.findIndex(c => c.id===ch.id);
+    if (idx>=0) { channels[idx].videoCount=videos.length; saveChannels(); renderChannels(); }
+    const chJ = JSON.stringify(ch).replace(/"/g,'&quot;');
+    el.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">
+        <div style="font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--soil);">📺 ${esc(ch.nickname)}</div>
+        <button class="btn btn-dark btn-sm" onclick='loadFeedByEl(this)' data-ch="${chJ}">🔄</button>
+      </div>
+      <div class="video-grid">
+        ${videos.map(v => {
+          const vJ = JSON.stringify({title:v.title,url:v.url}).replace(/"/g,'&quot;');
+          return `<div class="video-card">
+            <div class="v-thumb"><img src="${esc(v.thumb)}" onerror="this.style.display='none'" loading="lazy"></div>
+            <div class="v-body">
+              <div class="v-title">${esc(v.title)}</div>
+              <div class="v-date">📅 ${fmtDate(v.published)}</div>
+              <div class="v-actions">
+                <a href="${esc(v.url)}" target="_blank" class="btn btn-dark btn-sm" style="text-decoration:none;flex:1;">▶ Xem</a>
+                <button class="btn btn-green btn-sm" style="flex:1;" onclick='prefillByEl(this)' data-v="${vJ}">🤖 Phân tích</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    setStatus('✅ Tải xong '+videos.length+' video');
+  } catch(err) {
+    el.innerHTML = '<div class="empty"><div class="e-icon">⚠️</div><h3>Lỗi tải feed</h3><p>'+esc(err.message)+'</p></div>';
+    setStatus('❌ '+err.message);
+  }
+}
+
+function loadFeedByEl(btn) { loadFeed(JSON.parse(btn.getAttribute('data-ch'))); }
+function prefillByEl(btn) {
+  const v = JSON.parse(btn.getAttribute('data-v'));
+  document.getElementById('vTitle').value = v.title;
+  document.getElementById('vUrl').value = v.url;
+  document.getElementById('transcript').value = '';
+  document.getElementById('analysisResult').innerHTML = '';
+  selectSource('yt'); switchTab('analyze');
+  document.getElementById('transcript').focus(); toggleOpenBtn();
+  setStatus('📋 Dán phụ đề vào ô bên dưới → nhấn Phân tích');
+}
+function showFeedEmpty() {
+  document.getElementById('feedContent').innerHTML = '<div class="empty"><div class="e-icon">🔍</div><h3>Không tải được video</h3><p>Thử Channel ID dạng UCxxxxxxxx lấy từ URL kênh.</p></div>';
+}
+
+// ANALYSIS
+async function runAnalysis() {
+  const title   = document.getElementById('vTitle').value.trim();
+  const url     = document.getElementById('vUrl').value.trim();
+  const content = document.getElementById('transcript').value.trim();
+  if (content.length < 40) { setStatus('⚠️ Nội dung quá ngắn'); return; }
+  const resultEl = document.getElementById('analysisResult');
+  resultEl.innerHTML = '<div style="text-align:center;padding:30px;"><div class="dots"><span></span><span></span><span></span></div><p style="font-size:12px;color:var(--clay);margin-top:10px;">AI đang hệ thống hóa...</p></div>';
+  setStatus('🤖 Bước 1/2: Đang phân tích...');
+  const channelName = activeCh ? activeCh.nickname : 'Nguồn ngoài';
+  const srcLabel = currentSource==='yt'?'transcript video YouTube':currentSource==='fb'?'bài viết Facebook':'tài liệu';
+  const prompt = `Bạn là chuyên gia chăn nuôi và thú y. Phân tích nội dung ${srcLabel} sau, hệ thống hóa thành tài liệu kỹ thuật bằng tiếng Việt đầy đủ dấu. Chỉ trả về JSON hợp lệ thuần túy.
+
+Tiêu đề: ${title||'Không có'}
+Nguồn: ${channelName} (${currentSource==='fb'?'Facebook':currentSource==='yt'?'YouTube':'Khác'})
+Nội dung:
+${content.substring(0,7000)}
+
+JSON cần trả về (chỉ JSON, không text khác):
+{"subject":"Chủ đề ngắn gọn","species":"Loài vật chính","stage":"Giai đoạn","summary":"Tóm tắt 2-3 câu","source_type":"${currentSource}","process":[{"time":"Thời điểm","action":"Việc làm","detail":"Chi tiết"}],"feed":[{"stage":"Giai đoạn","product":"Thức ăn","amount":"Khẩu phần","note":"Ghi chú"}],"drugs":[{"name":"Tên thuốc chính xác","type":"Kháng sinh/Vitamin/Vaccine/Khoáng/Khử trùng/Khác","purpose":"Mục đích","dose":"Liều dùng","route":"tiêm/uống/trộn/phun","target_species":"Loài","stage_used":"Giai đoạn","warning":"Lưu ý"}],"warnings":["Cảnh báo"],"tips":["Mẹo thực tế"],"source_url":"${url}"}
+QUAN TRỌNG: Liệt kê TẤT CẢ thuốc/vaccine/hoá chất. Chỉ trả về JSON thuần.`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    let raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(raw);
+    if (parsed.drugs && parsed.drugs.length > 0) {
+      setStatus('🔍 Bước 2/2: Tra cứu '+parsed.drugs.length+' thuốc...');
+      parsed.drugs = await lookupDrugs(parsed.drugs);
+    }
+    pendingNote = {...parsed, videoTitle:title||parsed.subject, channel:channelName, savedAt:Date.now(), id:Date.now()};
+    window._currentDrugs = parsed.drugs||[];
+    renderResult(parsed, resultEl);
+    // Đảm bảo tab analyze đang hiện, scroll xuống kết quả
+    switchTab('analyze');
+    setTimeout(()=>{
+      resultEl.scrollIntoView({behavior:'smooth',block:'start'});
+      // Flash tab để báo xong
+      const tabEl=document.querySelector('[data-tab="analyze"]');
+      if(tabEl){tabEl.style.color='var(--leaf)';setTimeout(()=>tabEl.style.color='',1500);}
+    },100);
+    setStatus('✅ Xong! '+( parsed.drugs||[]).length+' thuốc/hoá chất');
+  } catch(err) {
+    // Thử lại với prompt đơn giản hơn nếu JSON parse fail
+    if(err.message.includes('JSON') || err.message.includes('Parse')){
+      setStatus('⚠️ Đang thử lại với chế độ đơn giản...');
+      try {
+        const res2 = await fetch('https://api.anthropic.com/v1/messages', {
+          method:'POST', headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+          body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:`Tóm tắt nội dung chăn nuôi sau bằng tiếng Việt. Chỉ trả về JSON thuần:
+{"subject":"...","species":"...","stage":"...","summary":"...","source_type":"${currentSource}","process":[],"feed":[],"drugs":[],"warnings":[],"tips":[],"source_url":"${url}"}
+
+Nội dung:
+${content.substring(0,4000)}`}] })
+        });
+        const d2 = await res2.json();
+        let r2 = (d2.content||[]).map(b=>b.text||'').join('').replace(/\`\`\`json|\`\`\`/g,'').trim();
+        const p2 = JSON.parse(r2);
+        pendingNote = {...p2, videoTitle:title||p2.subject, channel:channelName, savedAt:Date.now(), id:Date.now()};
+        window._currentDrugs = p2.drugs||[];
+        renderResult(p2, resultEl);
+        switchTab('analyze');
+        setTimeout(()=>resultEl.scrollIntoView({behavior:'smooth',block:'start'}),100);
+        setStatus('✅ Xong!');
+        return;
+      } catch(e2){}
+    }
+    resultEl.innerHTML = '<div style="background:#fff0f0;border:1.5px solid var(--rust);border-radius:8px;padding:14px;color:var(--rust);">❌ Lỗi: '+esc(err.message)+'<br><small>Thử lại hoặc rút ngắn nội dung transcript.</small></div>';
+    setStatus('❌ '+err.message);
+  }
+}
+
+async function lookupDrugs(drugList) {
+  const prompt = `Dược sĩ thú y. Bổ sung thông tin chi tiết. Chỉ trả về JSON mảng thuần.\n${JSON.stringify(drugList)}\nBổ sung: "active_ingredient","pharmacology","withdrawal_days"(số nguyên),"storage","contraindication". Không biết để "".`;
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:4000, messages:[{role:'user',content:prompt}] })
+    });
+    const data = await res.json();
+    let raw = (data.content||[]).map(b=>b.text||'').join('').replace(/```json|```/g,'').trim();
+    return JSON.parse(raw);
+  } catch { return drugList; }
+}
+
+function renderResult(d, el) {
+  const savedNames = drugs.map(x=>(x.name||'').toLowerCase());
+  const isFb = d.source_type==='fb';
+  el.innerHTML = `<div class="result-container">
+    <div style="background:var(--soil);border-radius:10px;padding:14px 16px;">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(212,168,83,0.6);margin-bottom:3px;">${isFb?'📘 FACEBOOK':'📺 YOUTUBE'} · CHỦ ĐỀ</div>
+      <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:900;color:var(--straw);line-height:1.3;">${esc(d.subject||'Phân tích nội dung')}</div>
+      <div style="margin-top:4px;font-size:12px;color:rgba(255,255,255,0.7);">🐾 ${esc(d.species||'')}${d.stage?' · '+esc(d.stage):''}</div>
+      <div style="margin-top:7px;font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85);">${esc(d.summary||'')}</div>
+    </div>
+    ${d.process&&d.process.length?`<div class="result-section sec-process"><div class="result-section-head"><div class="section-icon">📅</div><div class="section-title">Quy Trình Theo Thời Gian</div></div><div class="result-section-body"><div class="timeline">${d.process.map(p=>`<div class="tl-item"><div class="tl-dot"></div><div class="tl-head">⏱ ${esc(p.time)}</div><div class="tl-body"><strong>${esc(p.action)}</strong>${p.detail?' — '+esc(p.detail):''}</div></div>`).join('')}</div></div></div>`:''}
+    ${d.feed&&d.feed.length?`<div class="result-section sec-feed"><div class="result-section-head"><div class="section-icon">🌾</div><div class="section-title">Thức Ăn & Khẩu Phần</div></div><div class="result-section-body" style="overflow-x:auto;"><table class="data-table"><thead><tr><th>GIAI ĐOẠN</th><th>SẢN PHẨM</th><th>KHẨU PHẦN</th><th>GHI CHÚ</th></tr></thead><tbody>${d.feed.map(f=>`<tr><td>${esc(f.stage)}</td><td style="font-weight:700;color:var(--grass);">${esc(f.product)}</td><td>${esc(f.amount)}</td><td style="font-style:italic;color:var(--clay);">${esc(f.note)}</td></tr>`).join('')}</tbody></table></div></div>`:''}
+    ${d.drugs&&d.drugs.length?`<div class="result-section sec-drug"><div class="result-section-head"><div class="section-icon">💊</div><div class="section-title">Thuốc & Hoá Chất (${d.drugs.length})</div><button class="btn btn-drug btn-xs" onclick="saveAllDrugs()" style="margin-left:auto;">💾 Tất cả</button></div><div class="result-section-body">${d.drugs.map((drug,i)=>`<div class="drug-card ${drug.warning?'drug-warn':''}" id="dcard-${i}"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;"><div><div class="drug-card-name">💊 ${esc(drug.name)}</div><span class="drug-tag">${esc(drug.type||'Thuốc')}</span>${drug.target_species?'<span class="drug-tag">'+esc(drug.target_species)+'</span>':''}${drug.route?'<span class="drug-tag">'+esc(drug.route)+'</span>':''}</div><button class="btn btn-drug btn-xs" id="sbtn-${i}" onclick="saveDrug(${i})">${savedNames.includes((drug.name||'').toLowerCase())?'✅':'💾'}</button></div><div class="drug-card-info">${drug.purpose?'<p><strong>Mục đích:</strong> '+esc(drug.purpose)+'</p>':''}${drug.active_ingredient?'<p><strong>Hoạt chất:</strong> '+esc(drug.active_ingredient)+'</p>':''}${drug.dose?'<p><strong>Liều dùng:</strong> '+esc(drug.dose)+'</p>':''}${drug.withdrawal_days!==undefined&&drug.withdrawal_days!==''?'<p><strong>Ngừng trước giết mổ:</strong> '+(drug.withdrawal_days===0||drug.withdrawal_days==='0'?'Không cần':drug.withdrawal_days+' ngày')+'</p>':''}${drug.storage?'<p><strong>Bảo quản:</strong> '+esc(drug.storage)+'</p>':''}${drug.contraindication?'<p style="color:var(--rust);"><strong>⚠️ Chống chỉ định:</strong> '+esc(drug.contraindication)+'</p>':''}${drug.warning?'<p style="color:var(--warn);"><strong>⚠️ Lưu ý:</strong> '+esc(drug.warning)+'</p>':''}</div></div>`).join('')}</div></div>`:''}
+    ${d.warnings&&d.warnings.length?`<div class="result-section sec-warn"><div class="result-section-head"><div class="section-icon">⚠️</div><div class="section-title">Cảnh Báo & Lưu Ý</div></div><div class="result-section-body"><ul>${d.warnings.map(w=>'<li>'+esc(w)+'</li>').join('')}</ul></div></div>`:''}
+    ${d.tips&&d.tips.length?`<div class="result-section sec-apply"><div class="result-section-head"><div class="section-icon">💡</div><div class="section-title">Mẹo Áp Dụng Thực Tế</div></div><div class="result-section-body"><ul>${d.tips.map(t=>'<li>'+esc(t)+'</li>').join('')}</ul></div></div>`:''}
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-green btn-block" onclick="saveNote()" style="flex:1;">💾 Lưu ghi chú</button>
+      ${d.source_url?'<a href="'+esc(d.source_url)+'" target="_blank" class="btn btn-dark btn-sm" style="text-decoration:none;">🔗</a>':''}
+    </div>
+  </div>`;
+}
+
+// DRUG SAVE
+function saveDrug(i) {
+  const drug = window._currentDrugs[i];
+  if (!drug) return;
+  if (!drugs.find(d=>d.name.toLowerCase()===drug.name.toLowerCase())) {
+    drugs.unshift({...drug, savedAt:Date.now(), id:Date.now()+i});
+    localStorage.setItem('yt_drugs',JSON.stringify(drugs));
+    updateCounts(); renderDrugs();
+  }
+  const btn=document.getElementById('sbtn-'+i);
+  if (btn) { btn.textContent='✅'; btn.disabled=true; }
+  setStatus('💾 Đã lưu: '+drug.name);
+}
+function saveAllDrugs() {
+  let count=0;
+  (window._currentDrugs||[]).forEach((drug,i)=>{
+    if (!drugs.find(d=>d.name.toLowerCase()===drug.name.toLowerCase())) { drugs.unshift({...drug,savedAt:Date.now(),id:Date.now()+i}); count++; }
+    const btn=document.getElementById('sbtn-'+i); if(btn){btn.textContent='✅';btn.disabled=true;}
+  });
+  localStorage.setItem('yt_drugs',JSON.stringify(drugs)); updateCounts(); renderDrugs();
+  setStatus('💾 Đã lưu '+count+' thuốc');
+}
+function saveNote() {
+  if (!pendingNote) return;
+  if (!notes.find(n=>n.id===pendingNote.id)) notes.unshift(pendingNote);
+  localStorage.setItem('yt_notes',JSON.stringify(notes)); updateCounts(); renderNotes();
+  setStatus('💾 Đã lưu ghi chú!');
+}
+
+// RENDER DRUGS
+function renderDrugs() {
+  const el=document.getElementById('drugsContainer');
+  const q=(document.getElementById('drugSearch')?.value||'').toLowerCase();
+  const f=drugs.filter(d=>(d.name||'').toLowerCase().includes(q)||(d.purpose||'').toLowerCase().includes(q)||(d.type||'').toLowerCase().includes(q)||(d.target_species||'').toLowerCase().includes(q)||(d.active_ingredient||'').toLowerCase().includes(q));
+  if (!f.length){el.innerHTML='<div class="empty"><div class="e-icon">💊</div><h3>'+(q?'Không tìm thấy':'Kho thuốc trống')+'</h3><p>'+(q?'Thử từ khoá khác.':'Phân tích nội dung và lưu thuốc.')+'</p></div>';return;}
+  el.innerHTML=f.map(d=>`<div class="drug-db-item"><div class="drug-db-head"><div><div class="drug-db-name">💊 ${esc(d.name)}</div><div class="drug-db-source">${esc(d.type||'')} · ${fmtDate(new Date(d.savedAt).toISOString())}</div></div><button class="btn btn-danger btn-xs" onclick="deleteDrug(${d.id})">✕</button></div><div class="drug-db-body"><div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:5px;">${d.target_species?'<span class="drug-tag">'+esc(d.target_species)+'</span>':''}${d.route?'<span class="drug-tag">'+esc(d.route)+'</span>':''}</div><table>${d.purpose?'<tr><td>Mục đích</td><td>'+esc(d.purpose)+'</td></tr>':''}${d.active_ingredient?'<tr><td>Hoạt chất</td><td>'+esc(d.active_ingredient)+'</td></tr>':''}${d.dose?'<tr><td>Liều dùng</td><td>'+esc(d.dose)+'</td></tr>':''}${d.withdrawal_days!==undefined&&d.withdrawal_days!==''?'<tr><td>Ngừng thuốc</td><td>'+(d.withdrawal_days===0||d.withdrawal_days==='0'?'Không cần':d.withdrawal_days+' ngày')+'</td></tr>':''}${d.storage?'<tr><td>Bảo quản</td><td>'+esc(d.storage)+'</td></tr>':''}${d.contraindication?'<tr><td style="color:var(--rust);">Chống chỉ định</td><td style="color:var(--rust);">'+esc(d.contraindication)+'</td></tr>':''}</table></div></div>`).join('');
+}
+function deleteDrug(id){drugs=drugs.filter(d=>d.id!==id);localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();setStatus('🗑️ Đã xoá');}
+function clearDrugs(){if(!drugs.length||!confirm('Xoá tất cả '+drugs.length+' thuốc?'))return;drugs=[];localStorage.setItem('yt_drugs','[]');updateCounts();renderDrugs();}
+
+// RENDER NOTES
+function renderNotes() {
+  const el=document.getElementById('notesContainer');
+  const q=(document.getElementById('noteSearch')?.value||'').toLowerCase();
+  const f=notes.filter(n=>(n.videoTitle||'').toLowerCase().includes(q)||(n.subject||'').toLowerCase().includes(q)||(n.summary||'').toLowerCase().includes(q)||(n.species||'').toLowerCase().includes(q));
+  if (!f.length){el.innerHTML='<div class="empty"><div class="e-icon">📚</div><h3>'+(q?'Không tìm thấy':'Chưa có ghi chú')+'</h3><p>'+(q?'Thử từ khoá khác.':'Phân tích và nhấn Lưu ghi chú.')+'</p></div>';return;}
+  el.innerHTML=f.map(n=>`<div class="note-card"><div class="note-card-head"><div style="flex:1;"><div class="note-card-title">${esc(n.videoTitle||n.subject||'Ghi chú')}</div><div style="margin-top:3px;">${n.source_type==='fb'?'<span class="note-tag fb">📘 FB</span>':'<span class="note-tag">📺 YT</span>'}${n.species?'<span class="note-tag">🐾 '+esc(n.species)+'</span>':''}${n.drugs&&n.drugs.length?'<span class="note-tag" style="background:var(--drug-light);color:var(--drug);border-color:var(--drug);">💊 '+n.drugs.length+'</span>':''}</div><div class="note-card-meta">${esc(n.channel||'')} · ${fmtDate(new Date(n.savedAt).toISOString())}</div></div><button class="btn btn-danger btn-xs" onclick="deleteNote(${n.id})">✕</button></div><div class="note-body" id="nb-${n.id}">${n.summary?'<p style="font-style:italic;margin-bottom:5px;">'+esc(n.summary)+'</p>':''}${n.process&&n.process.length?'<p><strong>📅</strong> '+n.process.map(p=>esc(p.time)+': '+esc(p.action)).join(' → ')+'</p>':''}${n.drugs&&n.drugs.length?'<p style="margin-top:4px;"><strong>💊</strong> '+n.drugs.map(d=>esc(d.name)).join(', ')+'</p>':''}</div><div class="note-footer"><div>${n.stage?'<span class="note-tag">'+esc(n.stage)+'</span>':''}</div><div style="display:flex;gap:5px;"><button class="btn btn-outline btn-xs" onclick="toggleNote('${n.id}')">👁</button>${n.source_url?'<a href="'+esc(n.source_url)+'" target="_blank" class="btn btn-dark btn-xs" style="text-decoration:none;">🔗</a>':''}</div></div></div>`).join('');
+}
+function toggleNote(id){const el=document.getElementById('nb-'+id);if(el)el.classList.toggle('expanded');}
+function deleteNote(id){notes=notes.filter(n=>n.id!==id);localStorage.setItem('yt_notes',JSON.stringify(notes));updateCounts();renderNotes();setStatus('🗑️ Đã xoá ghi chú');}
+function clearNotes(){if(!notes.length||!confirm('Xoá tất cả '+notes.length+' ghi chú?'))return;notes=[];localStorage.setItem('yt_notes','[]');updateCounts();renderNotes();}
+
+// UI HELPERS
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  ['feed','analyze','drugs','notes'].forEach(id=>{const el=document.getElementById('tab-'+id);if(el)el.style.display=id===name?'':'none';});
+}
+function updateCounts(){document.getElementById('noteCount').textContent=notes.length;document.getElementById('drugCount').textContent=drugs.length;}
+function setStatus(msg){document.getElementById('status').textContent=msg;}
+
+function getApiKey(){return localStorage.getItem('cn_apikey')||'';}
+function saveApiKey(){const v=document.getElementById('apiKeyInput').value.trim();if(v)localStorage.setItem('cn_apikey',v);}
+function toggleApiPanel(){
+  const p=document.getElementById('apiKeyPanel');
+  const show=p.style.display==='none';
+  p.style.display=show?'':'none';
+  if(show){
+    document.getElementById('apiKeyInput').value=getApiKey();
+    document.getElementById('apiKeyInput').focus();
+  }
+}
+
+async function fetchTranscript(){
+  const url=document.getElementById('vUrl').value.trim();
+  if(!url){setStatus('⚠️ Paste link video YouTube trước');return;}
+  const m=url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
+  if(!m){setStatus('⚠️ Link video không hợp lệ');return;}
+  const vid=m[1];
+  setStatus('📥 Đang lấy transcript...');
+  const ta=document.getElementById('transcript');
+  ta.value='';
+
+  // Danh sách API thử lần lượt
+  const targets=[
+    `https://yt-transcript-api.vercel.app/api/transcript?videoId=${vid}&lang=vi`,
+    `https://yt-transcript-api.vercel.app/api/transcript?videoId=${vid}&lang=en`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/watch?v='+vid)}`,
+  ];
+
+  // Thử API transcript trực tiếp
+  for(const apiUrl of targets.slice(0,2)){
+    try{
+      const res=await fetch(apiUrl,{signal:AbortSignal.timeout(10000)});
+      if(!res.ok) continue;
+      const data=await res.json();
+      const items=data.transcript||data.captions||data||[];
+      if(Array.isArray(items)&&items.length>5){
+        const text=items.map(i=>i.text||i.t||i).filter(Boolean).join(' ');
+        if(text.length>100){ta.value=text;setStatus('✅ Lấy transcript thành công! '+items.length+' đoạn');return;}
+      }
+    }catch(e){continue;}
+  }
+
+  // Thử lấy từ trang YouTube qua proxy rồi parse XML caption
+  try{
+    const proxyUrl=`https://api.allorigins.win/get?url=${encodeURIComponent('https://www.youtube.com/watch?v='+vid)}`;
+    const res=await fetch(proxyUrl,{signal:AbortSignal.timeout(12000)});
+    const json=await res.json();
+    const html=json.contents||'';
+    // Tìm URL caption trong source
+    const capMatch=html.match(/"captionTracks":\[\{"baseUrl":"([^"]+)"/);
+    if(capMatch){
+      const capUrl=capMatch[1].replace(/\\u0026/g,'&').replace(/\\/g,'');
+      const capProxy=`https://api.allorigins.win/get?url=${encodeURIComponent(capUrl)}`;
+      const capRes=await fetch(capProxy,{signal:AbortSignal.timeout(10000)});
+      const capJson=await capRes.json();
+      const capXml=capJson.contents||'';
+      const doc=new DOMParser().parseFromString(capXml,'text/xml');
+      const texts=Array.from(doc.querySelectorAll('text')).map(el=>el.textContent.replace(/&amp;/g,'&').replace(/&#39;/g,"'").trim()).filter(t=>t.length>1);
+      if(texts.length>10){
+        ta.value=texts.join(' ');
+        setStatus('✅ Lấy transcript thành công! '+texts.length+' đoạn');
+        return;
+      }
+    }
+  }catch(e){}
+
+  ta.value='';
+  setStatus('⚠️ Video này không có transcript — hãy dán nội dung thủ công');
+}
+function openTactiq(){
+  const url=document.getElementById('vUrl').value.trim();
+  const m=url.match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/);
+  const vid=m?m[1]:'';
+  const tactiqUrl=vid
+    ? 'https://tactiq.io/tools/youtube-transcript?videoUrl='+encodeURIComponent('https://www.youtube.com/watch?v='+vid)
+    : 'https://tactiq.io/tools/youtube-transcript';
+  window.open(tactiqUrl,'_blank');
+  document.getElementById('tactiqHint').style.display='block';
+}
+function openVideoUrl(){const u=document.getElementById("vUrl").value.trim();if(u)window.open(u,"_blank");}
+function toggleOpenBtn(){const u=document.getElementById("vUrl").value.trim();const btn=document.getElementById("btnOpenUrl");if(btn)btn.style.display=u?"":"none";}
+function clearAll(){['vTitle','vUrl','transcript'].forEach(id=>document.getElementById(id).value='');document.getElementById('analysisResult').innerHTML='';pendingNote=null;window._currentDrugs=[];}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});}catch{return '';}}
+</script>
+
+</body>
+</html>
