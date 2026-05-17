@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chăn Nuôi AI">
+<meta name="theme-color" content="#1b4332">
+<title>Kho Kiến Thức Chăn Nuôi</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===== DESIGN TOKENS ===== */
+:root {
+  /* Primary - Deep Forest Green */
+  --p900: #1b4332; --p800: #2d6a4f; --p700: #40916c;
+  --p600: #52b788; --p500: #74c69d; --p100: #d8f3dc;
+  /* Accent - Warm Amber */
+  --a900: #7d4e00; --a700: #b87333; --a500: #e9a84c; --a100: #fef3c7;
+  /* Surface */
+  --bg: #f7f3ee; --surface: #ffffff; --surface2: #f0ebe2;
+  --border: #d4c9b8; --border2: #e8e0d4;
+  /* Text */
+  --t1: #1a1208; --t2: #4a3728; --t3: #7a6050;
+  /* Drug purple */
+  --drug: #5b21b6; --drug2: #7c3aed; --drug-bg: #f5f3ff; --drug-border: #c4b5fd;
+  /* Warn */
+  --warn: #d97706; --warn-bg: #fffbeb; --warn-border: #fcd34d;
+  /* Danger */
+  --red: #dc2626; --red-bg: #fef2f2;
+  /* FB */
+  --fb: #1877f2; --fb-bg: #eff6ff;
+  /* Sach indigo */
+  --ind: #3730a3; --ind-bg: #eef2ff; --ind-border: #c7d2fe;
+  /* Safe area */
+  --sat: env(safe-area-inset-top,0px);
+  --sab: env(safe-area-inset-bottom,0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg); color: var(--t1);
+  display: flex; flex-direction: column;
+  padding-top: var(--sat); padding-bottom: var(--sab);
+}
+
+/* ===== SPLASH ===== */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--p900);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 20px;
+  transition: opacity 0.5s;
+}
+.splash-icon {
+  width: 96px; height: 96px; border-radius: 24px;
+  background: linear-gradient(135deg, var(--p700), var(--p500));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 52px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  animation: pulse-icon 1.5s infinite;
+}
+@keyframes pulse-icon { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+#splash h2 { font-family: 'Playfair Display', serif; font-size: 24px; color: var(--a500); font-weight: 900; }
+#splash p { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.4); letter-spacing: 2px; }
+
+/* ===== HEADER ===== */
+header {
+  background: var(--p900);
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0; position: relative;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header-logo {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--p700), var(--p500));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.header-text h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 900; color: var(--a500); line-height: 1.2;
+}
+.header-text p {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px; color: rgba(255,255,255,0.35); letter-spacing: 1.5px; margin-top: 1px;
+}
+.ver-badge {
+  margin-left: auto; background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
+  padding: 3px 8px; border-radius: 20px; flex-shrink: 0;
+}
+
+/* ===== LAYOUT ===== */
+.app-shell { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.layout { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ===== SIDEBAR ===== */
+.sidebar { background: var(--surface2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.add-ch-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 16px; cursor: pointer;
+  background: linear-gradient(135deg, var(--p800), var(--p700));
+  border-bottom: 2px solid var(--p600);
+}
+.add-ch-toggle .label { color: white; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.add-ch-toggle .arr { color: rgba(255,255,255,0.7); font-size: 12px; }
+.add-ch-form { padding: 12px 14px; display: none; background: var(--surface); border-bottom: 1px solid var(--border2); }
+.add-ch-form.open { display: block; }
+.ch-list { display: flex; flex-direction: row; gap: 8px; padding: 8px 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; flex-shrink: 0; }
+.ch-list::-webkit-scrollbar { display: none; }
+.ch-item {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 5px 12px; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; display: flex; align-items: center; gap: 5px;
+  transition: all 0.15s;
+}
+.ch-item.active { border-color: var(--p700); background: var(--p100); }
+.ch-name { font-weight: 600; font-size: 12px; color: var(--t1); }
+.ch-del { background: none; border: none; cursor: pointer; font-size: 11px; color: #bbb; padding: 0 2px; }
+
+/* ===== INPUTS ===== */
+input[type=text], input[type=password], textarea {
+  width: 100%; padding: 10px 13px;
+  border: 1.5px solid var(--border); border-radius: 8px;
+  background: var(--surface); font-family: 'Inter', sans-serif;
+  font-size: 14px; color: var(--t1); outline: none;
+  -webkit-appearance: none; transition: border-color 0.15s, box-shadow 0.15s;
+}
+input:focus, textarea:focus {
+  border-color: var(--p700);
+  box-shadow: 0 0 0 3px rgba(64,145,108,0.15);
+}
+textarea { min-height: 110px; resize: vertical; line-height: 1.6; font-size: 13px; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  padding: 9px 14px; border: none; border-radius: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500;
+  cursor: pointer; display: inline-flex; align-items: center;
+  gap: 5px; justify-content: center; transition: all 0.15s;
+}
+.btn-green { background: var(--p700); color: white; }
+.btn-green:active { background: var(--p800); transform: scale(0.97); }
+.btn-dark { background: var(--p900); color: var(--a500); }
+.btn-drug { background: var(--drug); color: white; }
+.btn-amber { background: var(--a500); color: var(--a900); font-weight: 700; }
+.btn-outline { background: transparent; color: var(--t3); border: 1.5px solid var(--border); }
+.btn-outline:active { border-color: var(--p700); color: var(--p700); }
+.btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+.btn-danger:active { background: var(--red); color: white; }
+.btn-sm { padding: 6px 11px; font-size: 11px; }
+.btn-xs { padding: 4px 8px; font-size: 10px; }
+.btn-block { width: 100%; }
+
+/* ===== MAIN TABS ===== */
+.tabs {
+  display: flex; background: var(--p900);
+  overflow-x: auto; flex-shrink: 0;
+  border-bottom: 2px solid rgba(255,255,255,0.08);
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  padding: 11px 14px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45);
+  cursor: pointer; white-space: nowrap;
+  border-bottom: 3px solid transparent; margin-bottom: -2px; flex-shrink: 0;
+}
+.tab.active { color: var(--a500); border-bottom-color: var(--a500); }
+.badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--a500); color: var(--a900);
+  border-radius: 8px; font-size: 9px; font-weight: 700; margin-left: 3px;
+}
+.badge.drug { background: var(--drug2); color: white; }
+
+/* ===== CONTENT ===== */
+.main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+.tab-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; background: var(--bg); }
+
+/* ===== VIDEO GRID ===== */
+.video-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 12px; }
+.video-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: box-shadow 0.15s;
+}
+.video-card:active { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.v-thumb { width: 100%; aspect-ratio: 16/9; background: var(--p900); overflow: hidden; position: relative; }
+.v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.v-body { padding: 10px 13px; }
+.v-title { font-weight: 600; font-size: 13px; color: var(--t1); line-height: 1.4; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.v-date { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--t3); margin-bottom: 8px; }
+.v-actions { display: flex; gap: 6px; }
+
+/* ===== SOURCE TABS ===== */
+.source-tabs { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 12px; background: var(--surface); }
+.source-tab { flex: 1; padding: 10px 6px; text-align: center; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: var(--t3); border-right: 1px solid var(--border); transition: all 0.15s; }
+.source-tab:last-child { border-right: none; }
+.source-tab.active-yt { background: var(--p700); color: white; font-weight: 700; }
+.source-tab.active-fb { background: var(--fb); color: white; font-weight: 700; }
+.source-tab.active-other { background: var(--p900); color: var(--a500); font-weight: 700; }
+
+/* ===== NOTICES ===== */
+.notice {
+  background: var(--a100); border: 1px solid var(--warn-border);
+  border-radius: 10px; padding: 10px 13px;
+  font-size: 12px; line-height: 1.6; color: var(--a900); margin-bottom: 12px;
+}
+.notice-fb { background: var(--fb-bg); border-color: #bfdbfe; color: #1e40af; }
+.notice-ind { background: var(--ind-bg); border-color: var(--ind-border); color: var(--ind); }
+
+/* ===== INPUT PANEL ===== */
+.input-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.panel-title { font-family: 'Playfair Display', serif; font-size: 15px; font-weight: 700; color: var(--t1); margin-bottom: 3px; }
+.panel-hint { font-size: 12px; color: var(--t3); font-style: italic; line-height: 1.5; margin-bottom: 11px; }
+.fg { margin-bottom: 8px; }
+
+/* ===== API KEY PANELS ===== */
+.apikey-panel {
+  border-radius: 10px; padding: 11px 13px; margin-bottom: 10px; display: none;
+  background: var(--a100); border: 1.5px solid var(--warn-border);
+}
+.apikey-panel .plbl { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--a900); margin-bottom: 7px; font-weight: 600; }
+.google-panel {
+  border-radius: 10px; padding: 11px 13px; margin-bottom: 10px; display: none;
+  background: var(--ind-bg); border: 1.5px solid var(--ind-border);
+}
+.google-panel .plbl { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--ind); margin-bottom: 7px; font-weight: 600; }
+.settings-bar { display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 10px; }
+
+/* ===== RESULT CARDS ===== */
+.result-container { display: flex; flex-direction: column; gap: 12px; }
+.result-header {
+  background: linear-gradient(135deg, var(--p800), var(--p600));
+  border-radius: 12px; padding: 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+  box-shadow: 0 4px 16px rgba(27,67,50,0.25);
+}
+.rh-icon { font-size: 36px; line-height: 1; flex-shrink: 0; }
+.rh-src { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.rh-title { font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 900; color: white; line-height: 1.2; margin-bottom: 4px; }
+.rh-stage { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--a500); margin-bottom: 8px; }
+.rh-summary { font-size: 13px; line-height: 1.6; color: rgba(255,255,255,0.85); }
+
+/* ===== STATS GRID ===== */
+.stats-wrap {
+  background: var(--surface); border-radius: 12px; overflow: hidden;
+  border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.stats-head { background: var(--p900); padding: 8px 13px; display: flex; align-items: center; gap: 6px; }
+.stats-head span { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.5); }
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); }
+.stat-box { background: var(--surface); padding: 12px 13px; }
+.stat-icon { font-size: 18px; margin-bottom: 3px; }
+.stat-lbl { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--t3); letter-spacing: 1px; text-transform: uppercase; }
+.stat-val { font-size: 17px; font-weight: 700; color: var(--t1); line-height: 1.2; }
+.stat-unit { font-size: 11px; color: var(--t3); font-weight: 400; }
+
+/* ===== SECTIONS ===== */
+.rsec { background: var(--surface); border-radius: 12px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.rsec-head { padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--border2); }
+.rsec-head.green { background: var(--p100); }
+.rsec-head.amber { background: var(--a100); }
+.rsec-head.purple { background: var(--drug-bg); }
+.rsec-head.warn { background: var(--warn-bg); }
+.rsec-head.teal { background: #e6fffa; }
+.rsec-icon { font-size: 18px; }
+.rsec-title { font-family: 'Playfair Display', serif; font-size: 14px; font-weight: 700; color: var(--t1); flex: 1; }
+.rsec-body { padding: 13px 14px; font-size: 13px; line-height: 1.8; }
+
+/* ===== TIMELINE ===== */
+.tl { position: relative; padding-left: 20px; }
+.tl::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(to bottom, var(--p700), var(--p100)); border-radius: 2px; }
+.tl-item { position: relative; margin-bottom: 13px; }
+.tl-dot { position: absolute; left: -17px; top: 4px; width: 10px; height: 10px; background: var(--p700); border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px var(--p700); }
+.tl-head { font-weight: 700; font-size: 13px; color: var(--p800); margin-bottom: 2px; }
+.tl-body { font-size: 12.5px; color: var(--t2); line-height: 1.6; }
+
+/* ===== DATA TABLE ===== */
+.dtable { width: 100%; border-collapse: collapse; font-size: 12px; }
+.dtable th { padding: 7px 8px; text-align: left; font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; border: 1px solid var(--border2); background: var(--surface2); color: var(--t3); }
+.dtable td { padding: 7px 8px; border: 1px solid var(--border2); vertical-align: top; }
+.dtable tr:nth-child(even) td { background: #fafaf8; }
+
+/* ===== DRUG CARD ===== */
+.drug-card { background: var(--drug-bg); border: 1px solid var(--drug-border); border-radius: 10px; padding: 12px 13px; margin-bottom: 10px; }
+.drug-card.warn-card { background: var(--warn-bg); border-color: var(--warn-border); }
+.drug-name { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--drug); margin-bottom: 5px; }
+.drug-card.warn-card .drug-name { color: var(--warn); }
+.drug-info { font-size: 12.5px; line-height: 1.7; color: var(--t2); }
+.drug-tag { display: inline-block; padding: 2px 7px; border-radius: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; margin: 2px 2px 2px 0; background: #ede9fe; color: var(--drug); }
+
+/* ===== DRUG DB (Kho thuốc) ===== */
+.drug-db-item { background: var(--surface); border: 1px solid var(--drug-border); border-radius: 10px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.drug-db-head { background: var(--drug-bg); padding: 9px 13px; display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border-bottom: 1px solid var(--drug-border); }
+.drug-db-name { font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; color: var(--drug); }
+.drug-db-src { font-size: 10px; color: var(--t3); margin-top: 2px; }
+.drug-db-src.ch { color: var(--p700); font-weight: 600; }
+.drug-db-body { padding: 10px 13px; }
+.drug-db-body table { width: 100%; border-collapse: collapse; }
+.drug-db-body td { padding: 5px 7px; border: 1px solid var(--border2); font-size: 11.5px; vertical-align: top; }
+.drug-db-body td:first-child { font-weight: 600; width: 38%; color: var(--t3); background: #faf9f7; }
+
+/* ===== NOTES ===== */
+.note-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.note-head { background: var(--surface2); padding: 11px 13px; border-bottom: 1px solid var(--border2); display: flex; gap: 8px; align-items: flex-start; }
+.note-title { font-weight: 700; font-size: 13px; color: var(--t1); flex: 1; line-height: 1.4; }
+.note-meta { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--t3); margin-top: 3px; }
+.ntag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; background: var(--p100); color: var(--p800); border: 1px solid var(--p600); margin-right: 3px; margin-top: 3px; }
+.ntag.fb { background: var(--fb-bg); color: var(--fb); border-color: #bfdbfe; }
+.ntag.drug { background: var(--drug-bg); color: var(--drug); border-color: var(--drug-border); }
+.note-body { padding: 11px 13px; font-size: 12.5px; line-height: 1.75; color: var(--t2); max-height: 150px; overflow: hidden; position: relative; }
+.note-body::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 35px; background: linear-gradient(transparent, var(--surface)); }
+.note-body.expanded { max-height: none; }
+.note-body.expanded::after { display: none; }
+.note-foot { padding: 8px 13px; border-top: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fafaf8; }
+
+/* ===== EMPTY / LOADING ===== */
+.empty { text-align: center; padding: 40px 16px; color: var(--t3); }
+.empty .ei { font-size: 40px; margin-bottom: 12px; }
+.empty h3 { font-family: 'Playfair Display', serif; font-size: 17px; margin-bottom: 6px; color: var(--t2); }
+.empty p { font-size: 12.5px; line-height: 1.6; max-width: 260px; margin: 0 auto; }
+.dots { display: inline-flex; gap: 4px; align-items: center; }
+.dots span { width: 7px; height: 7px; background: var(--p600); border-radius: 50%; animation: jmp 1s infinite; }
+.dots span:nth-child(2) { animation-delay: 0.15s; }
+.dots span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes jmp { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-7px)} }
+
+/* ===== STATUS BAR ===== */
+.statusbar {
+  background: var(--p900); padding: 5px 16px; flex-shrink: 0;
+  display: flex; align-items: center; gap: 6px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.statusbar span { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.45); }
+
+/* ===== SEARCH ===== */
+.search-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.search-row input { flex: 1; }
+
+/* ===== DRUG SUB-TABS ===== */
+.drug-subtabs { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid var(--border); margin-bottom: 12px; }
+.dst { flex: 1; padding: 10px 6px; text-align: center; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 500; background: var(--surface); color: var(--t3); border-right: 1px solid var(--border); transition: all 0.15s; }
+.dst:last-child { border-right: none; }
+.dst.act-d { background: var(--drug); color: white; font-weight: 700; }
+.dst.act-g { background: var(--p800); color: white; font-weight: 700; }
+.dst.act-s { background: var(--ind); color: white; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-icon">🐄</div>
+  <h2>Kho Kiến Thức Chăn Nuôi</h2>
+  <p>ĐANG KHỞI ĐỘNG...</p>
+</div>
+
+<div class="app-shell">
+  <header>
+    <div class="header-logo">🐄</div>
+    <div class="header-text">
+      <h1>Kho Kiến Thức Chăn Nuôi</h1>
+      <p>YOUTUBE · FACEBOOK · THÚ Y · KHO THUỐC</p>
+    </div>
+    <div class="ver-badge">v3.3</div>
+  </header>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="add-ch-toggle" onclick="toggleAddForm()">
+        <div class="label">🌿 Thêm kênh YouTube</div>
+        <span class="arr" id="addArr">▼</span>
+      </div>
+      <div class="add-ch-form" id="addChForm">
+        <div class="fg"><input type="text" id="chUrl" placeholder="Link kênh / @tên kênh / UCxxxxx" /></div>
+        <div class="fg"><input type="text" id="chNick" placeholder="Tên gợi nhớ" /></div>
+        <button class="btn btn-green btn-block" onclick="addChannel()">🌿 Thêm kênh</button>
+      </div>
+      <div style="padding:6px 14px 4px;"><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--t3);">📺 ĐANG THEO DÕI</span></div>
+      <div class="ch-list" id="chList"></div>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <div class="tabs">
+        <div class="tab active" data-tab="feed" onclick="switchTab('feed')">📺 Video mới</div>
+        <div class="tab" data-tab="analyze" onclick="switchTab('analyze')">🤖 Phân tích AI</div>
+        <div class="tab" data-tab="drugs" onclick="switchTab('drugs')">💊 Kho thuốc <span class="badge drug" id="drugCount">0</span></div>
+        <div class="tab" data-tab="notes" onclick="switchTab('notes')">📚 Ghi chú <span class="badge" id="noteCount">0</span></div>
+      </div>
+
+      <!-- FEED -->
+      <div id="tab-feed" class="tab-content">
+        <div id="feedContent">
+          <div class="empty"><div class="ei">📺</div><h3>Chọn một kênh</h3><p>Thêm link kênh YouTube rồi nhấn vào tên kênh để tải video mới nhất.</p></div>
+        </div>
+      </div>
+
+      <!-- ANALYZE -->
+      <div id="tab-analyze" class="tab-content" style="display:none;">
+        <!-- API Key panels -->
+        <div class="apikey-panel" id="apikeyPanel">
+          <div class="plbl">🔑 ANTHROPIC API KEY</div>
+          <div class="fg" style="display:flex;gap:8px;">
+            <input type="password" id="apiKeyInput" placeholder="sk-ant-..." oninput="saveApiKey()" style="flex:1;font-size:12px;" />
+            <button class="btn btn-sm" onclick="toggleApiPanel()" style="background:var(--a900);color:white;">✕</button>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-green btn-sm" onclick="testApiKey()" id="btnTestKey" style="flex:1;">✓ Kiểm tra</button>
+            <div id="keyStatus" style="display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);padding:0 6px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--a900);margin-top:6px;">Lưu tự động trong máy.</div>
+        </div>
+        <div class="google-panel" id="googlePanel">
+          <div class="plbl">🔍 GOOGLE YOUTUBE DATA API KEY</div>
+          <div class="fg" style="display:flex;gap:8px;">
+            <input type="password" id="googleKeyInput" placeholder="AIzaSy..." oninput="saveGoogleKey()" style="flex:1;font-size:12px;" />
+            <button class="btn btn-sm" onclick="toggleGooglePanel()" style="background:var(--ind);color:white;">✕</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:6px;">
+            <button class="btn btn-sm" onclick="testGoogleKey()" id="btnTestGoogle" style="flex:1;background:var(--ind);color:white;">✓ Kiểm tra</button>
+            <div id="googleKeyStatus" style="display:flex;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--t3);padding:0 6px;"></div>
+          </div>
+          <div style="font-size:10px;color:var(--ind);line-height:1.5;">📋 console.cloud.google.com → Enable YouTube Data API v3 → Credentials → API Key</div>
+        </div>
+        <div class="settings-bar">
+          <button class="btn btn-outline btn-xs" onclick="toggleApiPanel()">🔑 Anthropic</button>
+          <button class="btn btn-xs" onclick="toggleGooglePanel()" style="background:var(--ind-bg);color:var(--ind);border:1px solid var(--ind-border);">🔍 Google API</button>
+        </div>
+
+        <div class="source-tabs">
+          <div class="source-tab active-yt" id="src-yt" onclick="selectSource('yt')">📺 YouTube</div>
+          <div class="source-tab" id="src-fb" onclick="selectSource('fb')">📘 Facebook</div>
+          <div class="source-tab" id="src-other" onclick="selectSource('other')">📄 Khác</div>
+        </div>
+
+        <div id="notice-yt" class="notice"><strong>📋 Lấy transcript YouTube:</strong> Mở video → <strong>⋯ ba chấm</strong> → <strong>"Hiển thị bản ghi"</strong> → Copy → Dán vào đây. Hoặc dùng <strong>tactiq.io</strong>.</div>
+        <div id="notice-fb" class="notice notice-fb" style="display:none;"><strong>📘 Facebook:</strong> Giữ ngón tay vào chữ → bôi đen → Copy → Dán vào đây.</div>
+        <div id="notice-other" class="notice" style="display:none;"><strong>📄 Dán bất kỳ nội dung nào</strong> về chăn nuôi để AI hệ thống hóa.</div>
+
+        <div class="input-panel">
+          <div class="panel-title" id="panelTitle">✍️ Nội dung video YouTube</div>
+          <div class="panel-hint" id="panelHint">AI sẽ nhận diện chủ đề, số liệu, thức ăn, thuốc dùng.</div>
+          <div class="fg"><input type="text" id="vTitle" placeholder="Tiêu đề (tùy chọn)" /></div>
+          <div class="fg" style="display:flex;gap:8px;">
+            <input type="text" id="vUrl" placeholder="Link nguồn (tùy chọn)" style="flex:1;" oninput="toggleCopyBtn()" />
+            <button class="btn btn-dark btn-sm" id="btnCopy" onclick="copyUrl()" style="display:none;white-space:nowrap;">📋</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button class="btn btn-sm" onclick="openTactiq()" style="flex:1;background:#00b4d8;color:white;">🌐 tactiq.io</button>
+            <button class="btn btn-sm" onclick="fetchYouTubeTranscript()" id="btnYtTranscript" style="flex:1;background:var(--ind);color:white;">📥 YouTube API</button>
+          </div>
+          <div class="fg"><textarea id="transcript" placeholder="Dán transcript/nội dung vào đây..."></textarea></div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-green btn-block" onclick="runAnalysis()" style="flex:2;">🤖 Phân tích & Hệ thống hóa</button>
+            <button class="btn btn-outline btn-sm" onclick="clearAll()">Xoá</button>
+          </div>
+        </div>
+        <div id="analysisResult"></div>
+      </div>
+
+      <!-- DRUGS -->
+      <div id="tab-drugs" class="tab-content" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--t1);">💊 Kho Thuốc</div>
+          <button class="btn btn-danger btn-sm" id="btnClearDrugs" onclick="clearDrugs()">🗑️ Xoá</button>
+        </div>
+        <div class="drug-subtabs">
+          <div id="dst-thucte" class="dst act-d" onclick="switchDrugTab('thucte')">📋 Thực Tế</div>
+          <div id="dst-giaotrình" class="dst" onclick="switchDrugTab('giaotrình')">📚 Giáo Trình</div>
+          <div id="dst-sach" class="dst" onclick="switchDrugTab('sach')">📖 Sách</div>
+        </div>
+        <div class="search-row"><input type="text" id="drugSearch" placeholder="Tìm thuốc, bệnh, loài vật..." oninput="onDrugSearch()" /></div>
+        <div id="drugsContainer"></div>
+        <div id="giaotrinhContainer" style="display:none;"></div>
+        <div id="sachContainer" style="display:none;"></div>
+      </div>
+
+      <!-- NOTES -->
+      <div id="tab-notes" class="tab-content" style="display:none;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--t1);">📚 Kho Ghi Chú</div>
+          <button class="btn btn-danger btn-sm" onclick="clearNotes()">🗑️ Xoá</button>
+        </div>
+        <div class="search-row"><input type="text" id="noteSearch" placeholder="Tìm tiêu đề, chủ đề..." oninput="renderNotes()" /></div>
+        <div id="notesContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <div class="statusbar"><span id="status">✅ Sẵn sàng — v3.3</span></div>
+</div>
+
+<script>
+// ===== STATE =====
+var channels = JSON.parse(localStorage.getItem('yt_ch')||'[]');
+var notes    = JSON.parse(localStorage.getItem('yt_notes')||'[]');
+var drugs    = JSON.parse(localStorage.getItem('yt_drugs')||'[]');
+var activeCh = null, pendingNote = null, currentSource = 'yt';
+window._currentDrugs = [];
+
+// ===== INIT =====
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var s=document.getElementById('splash'); s.style.opacity='0';
+    setTimeout(function(){s.remove();},500);
+  }, 1200);
+});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+var _k=localStorage.getItem('cn_apikey')||'';
+if(_k) document.getElementById('apiKeyInput').value=_k;
+var _gk=localStorage.getItem('google_apikey')||'';
+if(_gk) document.getElementById('googleKeyInput').value=_gk;
+renderChannels(); renderNotes(); renderDrugs(); updateCounts();
+
+// ===== API KEYS =====
+function getApiKey(){return localStorage.getItem('cn_apikey')||'';}
+function saveApiKey(){var v=document.getElementById('apiKeyInput').value.trim();if(v)localStorage.setItem('cn_apikey',v);}
+function toggleApiPanel(){var p=document.getElementById('apikeyPanel');p.style.display=p.style.display==='none'||!p.style.display?'block':'none';}
+function getGoogleKey(){return localStorage.getItem('google_apikey')||'';}
+function saveGoogleKey(){var v=document.getElementById('googleKeyInput').value.trim();if(v)localStorage.setItem('google_apikey',v);}
+function toggleGooglePanel(){var p=document.getElementById('googlePanel');p.style.display=p.style.display==='none'||!p.style.display?'block':'none';}
+
+async function testApiKey(){
+  var key=document.getElementById('apiKeyInput').value.trim();
+  if(!key){document.getElementById('keyStatus').innerHTML='⚠️';return;}
+  var btn=document.getElementById('btnTestKey'),st=document.getElementById('keyStatus');
+  btn.textContent='⏳...';btn.disabled=true;
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:10,messages:[{role:'user',content:'Hi'}]})});
+    var d=await r.json();
+    if(d.content||d.id){st.innerHTML='<span style="color:var(--p700);font-size:16px;">✅</span> OK!';btn.style.background='var(--p700)';localStorage.setItem('cn_apikey',key);}
+    else{var m=(d.error&&d.error.message)||'Lỗi';st.innerHTML='❌ '+(m.includes('credit')?'Hết tiền':m.includes('auth')||m.includes('invalid')?'Key sai':m.substring(0,15));btn.style.background='var(--red)';}
+  }catch(e){st.innerHTML='❌ Mạng';}
+  btn.textContent='✓ Kiểm tra';btn.disabled=false;
+}
+
+async function testGoogleKey(){
+  var key=document.getElementById('googleKeyInput').value.trim();
+  if(!key){document.getElementById('googleKeyStatus').innerHTML='⚠️';return;}
+  var btn=document.getElementById('btnTestGoogle'),st=document.getElementById('googleKeyStatus');
+  btn.textContent='⏳...';btn.disabled=true;
+  try{
+    var r=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&id=dQw4w9WgXcQ&key='+key);
+    var d=await r.json();
+    if(d.items){st.innerHTML='<span style="color:var(--p700);font-size:16px;">✅</span> OK!';btn.style.background='var(--p700)';localStorage.setItem('google_apikey',key);}
+    else{st.innerHTML='❌ '+((d.error&&d.error.message)||'Lỗi').substring(0,20);btn.style.background='var(--red)';}
+  }catch(e){st.innerHTML='❌ Mạng';}
+  btn.textContent='✓ Kiểm tra';btn.disabled=false;
+}
+
+// ===== SOURCE =====
+function selectSource(src){
+  currentSource=src;
+  ['yt','fb','other'].forEach(function(s){
+    document.getElementById('src-'+s).className='source-tab';
+    document.getElementById('notice-'+s).style.display='none';
+  });
+  document.getElementById('src-'+src).className='source-tab active-'+src;
+  document.getElementById('notice-'+src).style.display='';
+  var titles={yt:'✍️ Nội dung video YouTube',fb:'✍️ Nội dung bài viết Facebook',other:'✍️ Dán nội dung bất kỳ'};
+  var hints={yt:'AI sẽ nhận diện chủ đề, số liệu, thức ăn, thuốc dùng.',fb:'AI tóm tắt bài viết và nhận diện kỹ thuật chăn nuôi.',other:'AI tự nhận diện và hệ thống hóa kiến thức chăn nuôi.'};
+  document.getElementById('panelTitle').textContent=titles[src];
+  document.getElementById('panelHint').textContent=hints[src];
+}
+
+// ===== CHANNELS =====
+function toggleAddForm(){
+  var f=document.getElementById('addChForm'),a=document.getElementById('addArr');
+  f.classList.toggle('open');a.textContent=f.classList.contains('open')?'▲':'▼';
+}
+function addChannel(){
+  var url=document.getElementById('chUrl').value.trim(),nick=document.getElementById('chNick').value.trim();
+  if(!url){setStatus('⚠️ Nhập link kênh trước');return;}
+  var id=extractChId(url);
+  if(!id){setStatus('⚠️ Link không hợp lệ');return;}
+  if(channels.find(function(c){return c.id===id;})){setStatus('⚠️ Kênh đã được thêm');return;}
+  var ch={id:id,url:url,nickname:nick||url,addedAt:Date.now(),videoCount:0};
+  channels.push(ch);saveChannels();renderChannels();
+  document.getElementById('chUrl').value='';document.getElementById('chNick').value='';
+  document.getElementById('addChForm').classList.remove('open');document.getElementById('addArr').textContent='▼';
+  setStatus('✅ Đã thêm: '+ch.nickname);selectCh(ch);
+}
+function extractChId(url){
+  var m=url.match(/@([\w.-]+)/);if(m)return '@'+m[1];
+  m=url.match(/\/channel\/(UC[\w-]+)/);if(m)return m[1];
+  m=url.match(/\/(?:c|user)\/([\w.-]+)/);if(m)return m[1];
+  if(url.length>3)return url;return null;
+}
+function delChannel(id,e){
+  e.stopPropagation();channels=channels.filter(function(c){return c.id!==id;});
+  saveChannels();if(activeCh&&activeCh.id===id){activeCh=null;showFeedEmpty();}
+  renderChannels();setStatus('🗑️ Đã xoá kênh');
+}
+function renderChannels(){
+  var el=document.getElementById('chList');
+  if(!channels.length){el.innerHTML='<div class="empty" style="padding:12px 8px;"><div class="ei" style="font-size:24px;">🌱</div><p style="font-size:11px;">Thêm kênh YouTube bên trên</p></div>';return;}
+  el.innerHTML=channels.map(function(ch){
+    var j=JSON.stringify(ch).replace(/"/g,'&quot;');
+    return '<div class="ch-item '+(activeCh&&activeCh.id===ch.id?'active':'')+'" onclick="selectChByEl(this)" data-ch="'+j+'"><span class="ch-name">📺 '+esc(ch.nickname)+'</span><button class="ch-del" onclick="delChannel(\''+ch.id+'\',event)">✕</button></div>';
+  }).join('');
+}
+function selectChByEl(el){selectCh(JSON.parse(el.getAttribute('data-ch')));}
+function saveChannels(){localStorage.setItem('yt_ch',JSON.stringify(channels));}
+
+// ===== FEED =====
+function selectCh(ch){activeCh=ch;renderChannels();switchTab('feed');loadFeed(ch);}
+async function loadFeed(ch){
+  var el=document.getElementById('feedContent');
+  el.innerHTML='<div class="empty"><div class="ei"><div class="dots"><span></span><span></span><span></span></div></div><h3>Đang tải video...</h3></div>';
+  setStatus('⏳ Đang tải: '+ch.nickname);
+  var rssUrl=ch.id.startsWith('UC')?'https://www.youtube.com/feeds/videos.xml?channel_id='+ch.id:'https://www.youtube.com/feeds/videos.xml?user='+ch.id.replace('@','');
+  var tryFetch=async function(url,t){try{var r=await fetch(url,{signal:AbortSignal.timeout(t||7000)});if(!r.ok)return null;var ct=r.headers.get('content-type')||'';if(ct.includes('json')){var j=await r.json();return j.contents||j.data||null;}return await r.text();}catch(e){return null;}};
+  var enc=encodeURIComponent(rssUrl);
+  var xml=await tryFetch('https://api.allorigins.win/get?url='+enc,7000);
+  if(!xml||!xml.includes('<entry>'))xml=await tryFetch('https://corsproxy.io/?'+enc,7000);
+  if(!xml||!xml.includes('<entry>'))xml=await tryFetch('https://api.codetabs.com/v1/proxy?quest='+enc,7000);
+  if(!xml||!xml.includes('<entry>')){await new Promise(function(r){setTimeout(r,2000);});xml=await tryFetch('https://api.allorigins.win/get?url='+enc,8000);}
+  if(!xml||!xml.includes('<entry>')){showFeedEmpty();setStatus('⚠️ Không tải được — nhấn 🔄');return;}
+  var doc=new DOMParser().parseFromString(xml,'text/xml');
+  var entries=Array.from(doc.querySelectorAll('entry'));
+  var videos=entries.slice(0,12).map(function(e){
+    var vid=e.querySelector('videoId')?e.querySelector('videoId').textContent:'';
+    return{title:e.querySelector('title')?e.querySelector('title').textContent:'Không có tiêu đề',published:e.querySelector('published')?e.querySelector('published').textContent:'',url:'https://www.youtube.com/watch?v='+vid,thumb:'https://i.ytimg.com/vi/'+vid+'/mqdefault.jpg'};
+  });
+  var idx=channels.findIndex(function(c){return c.id===ch.id;});
+  if(idx>=0){channels[idx].videoCount=videos.length;saveChannels();renderChannels();}
+  var cj=JSON.stringify(ch).replace(/"/g,'&quot;');
+  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;">'
+    +'<div style="font-family:\'Playfair Display\',serif;font-size:16px;font-weight:700;color:var(--t1);">📺 '+esc(ch.nickname)+'</div>'
+    +'<button class="btn btn-dark btn-sm" onclick="loadFeedByEl(this)" data-ch="'+cj+'">🔄</button></div>'
+    +'<div class="video-grid">'+videos.map(function(v){
+      var vj=JSON.stringify({title:v.title,url:v.url}).replace(/"/g,'&quot;');
+      return '<div class="video-card"><div class="v-thumb"><img src="'+esc(v.thumb)+'" onerror="this.style.display=\'none\'" loading="lazy"></div>'
+        +'<div class="v-body"><div class="v-title">'+esc(v.title)+'</div><div class="v-date">📅 '+fmtDate(v.published)+'</div>'
+        +'<div class="v-actions"><a href="'+esc(v.url)+'" target="_blank" class="btn btn-dark btn-sm" style="text-decoration:none;flex:1;">▶ Xem</a>'
+        +'<button class="btn btn-green btn-sm" style="flex:1;" onclick="prefillByEl(this)" data-v="'+vj+'">🤖 Phân tích</button></div></div></div>';
+    }).join('')+'</div>';
+  setStatus('✅ Tải xong '+videos.length+' video');
+}
+function toggleHiddenVideos(){
+  window._feedShowAll = !window._feedShowAll;
+  if(window._feedBuildFn){
+    var fc=document.getElementById('feedContent');
+    if(fc) fc.innerHTML = window._feedBuildFn(window._feedShowAll);
+  }
+}
+function loadFeedByEl(btn){loadFeed(JSON.parse(btn.getAttribute('data-ch')));}
+function prefillByEl(btn){
+  var v=JSON.parse(btn.getAttribute('data-v'));
+  document.getElementById('vTitle').value=v.title;document.getElementById('vUrl').value=v.url;
+  document.getElementById('transcript').value='';document.getElementById('analysisResult').innerHTML='';
+  toggleCopyBtn();selectSource('yt');switchTab('analyze');
+  document.getElementById('transcript').focus();
+  setStatus('📋 Dán transcript → nhấn Phân tích');
+}
+function showFeedEmpty(){document.getElementById('feedContent').innerHTML='<div class="empty"><div class="ei">🔍</div><h3>Không tải được video</h3><p>Thử Channel ID dạng UCxxxxxxxx lấy từ URL kênh.</p></div>';}
+
+// ===== URL COPY & TACTIQ =====
+function toggleCopyBtn(){var u=document.getElementById('vUrl').value.trim();var b=document.getElementById('btnCopy');if(b)b.style.display=u?'':'none';}
+function copyUrl(){
+  var u=document.getElementById('vUrl').value.trim();if(!u)return;
+  try{navigator.clipboard.writeText(u);}catch(e){var x=document.createElement('textarea');x.value=u;document.body.appendChild(x);x.select();document.execCommand('copy');document.body.removeChild(x);}
+  var b=document.getElementById('btnCopy');if(b){b.textContent='✅';setTimeout(function(){b.textContent='📋';},1500);}
+  setStatus('📋 Đã copy link!');
+}
+function openTactiq(){
+  var u=document.getElementById('vUrl').value.trim();
+  var m=u.match(/(?:v=|youtu\.be\/)([\\w-]{11})/);
+  var vid=m?m[1]:'';
+  window.open(vid?'https://tactiq.io/tools/youtube-transcript?videoUrl='+encodeURIComponent('https://www.youtube.com/watch?v='+vid):'https://tactiq.io/tools/youtube-transcript','_blank');
+}
+async function fetchYouTubeTranscript(){
+  var u=document.getElementById('vUrl').value.trim();
+  var m=u.match(/(?:v=|youtu\.be\/)([\\w-]{11})/);
+  if(!m){setStatus('⚠️ Paste link video YouTube trước');return;}
+  var vid=m[1],gkey=getGoogleKey();
+  if(!gkey){setStatus('⚠️ Chưa có Google API Key');toggleGooglePanel();return;}
+  var btn=document.getElementById('btnYtTranscript');btn.textContent='⏳...';btn.disabled=true;
+  setStatus('📥 Đang lấy thông tin video...');
+  try{
+    var r=await fetch('https://www.googleapis.com/youtube/v3/videos?part=snippet&id='+vid+'&key='+gkey);
+    var d=await r.json();
+    if(d.items&&d.items.length){
+      var sn=d.items[0].snippet;
+      document.getElementById('transcript').value='Tiêu đề: '+sn.title+'\n\nMô tả: '+sn.description+'\n\nKênh: '+sn.channelTitle;
+      if(!document.getElementById('vTitle').value)document.getElementById('vTitle').value=sn.title;
+      setStatus('✅ Đã lấy title + description. Phân tích ngay!');
+    }else{setStatus('❌ Không tìm thấy video');}
+  }catch(e){setStatus('❌ '+e.message);}
+  btn.textContent='📥 YouTube API';btn.disabled=false;
+}
+
+// ===== FILTER TRANSCRIPT =====
+function filterTranscript(text){
+  var lines=text.split('\n').map(function(ln){
+    var p=ln.trim().split(' ');
+    if(p.length>0&&/^\d{1,2}:\d{2}:\d{2}/.test(p[0]))p.shift();
+    return p.join(' ').trim();
+  }).filter(function(ln){return ln.length>3;});
+  var kw=['con','kg','bao','tấn','lít','ml','gram','cám','thức ăn','ăn','khẩu phần','cho ăn','bữa','thuốc','vaccine','tiêm','uống','kháng sinh','vitamin','khoáng','ngày','tuần','tháng','giờ','sáng','chiều','tối','tuổi','giai đoạn','chuồng','nhiệt độ','thời tiết','nóng','lạnh','tắm','vệ sinh','khử trùng','heo','lợn','gà','bò','vịt','giống','nái','đực','thịt','đàn','bệnh','ốm','chết','tiêu chảy','ho','sốt','giá','bán','xuất','cân','1','2','3','4','5','6','7','8','9','%'];
+  var imp=lines.filter(function(l){var lo=l.toLowerCase();return kw.some(function(k){return lo.indexOf(k)>=0;});});
+  return(imp.length>=10?imp.slice(0,80):lines.slice(0,80)).join(' ').substring(0,3500);
+}
+
+// ===== ANALYSIS =====
+async function runAnalysis(){
+  var title=document.getElementById('vTitle').value.trim();
+  var url=document.getElementById('vUrl').value.trim();
+  var raw=document.getElementById('transcript').value.trim();
+  if(raw.length<40){setStatus('⚠️ Nội dung quá ngắn');return;}
+  var content=filterTranscript(raw);
+  var resultEl=document.getElementById('analysisResult');
+  resultEl.innerHTML='<div style="text-align:center;padding:30px;"><div class="dots"><span></span><span></span><span></span></div><p style="font-size:12px;color:var(--t3);margin-top:10px;">AI đang hệ thống hóa...</p></div>';
+  setStatus('🤖 Đang phân tích...');
+  if(!getApiKey()){resultEl.innerHTML='<div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:14px;color:var(--red);">❌ Chưa nhập API Key! Nhấn <strong>🔑 Anthropic</strong> để nhập.</div>';setStatus('❌ Thiếu API Key');return;}
+  var channelName=activeCh?activeCh.nickname:'Nguồn ngoài';
+  var prompt='Chuyên gia chăn nuôi thú y. Phân tích nội dung sau, trả về JSON ngắn gọn.\n\nTiêu đề: '+(title||'Không có')+'\nNguồn: '+channelName+'\nNội dung:\n'+content+'\n\nJSON (tối đa 5 phần tử/mảng, mỗi chuỗi ≤80 ký tự):\n{"subject":"","species":"","stage":"","summary":"1-2 câu","source_type":"'+currentSource+'","process":[{"time":"","action":"","detail":""}],"feed":[{"stage":"","product":"","amount":"","note":""}],"drugs":[{"name":"","type":"","purpose":"","dose":"","route":"","target_species":"","stage_used":"","warning":""}],"warnings":[""],"tips":[""],"source_url":"'+url+'"}\nChỉ JSON thuần.';
+  try{
+    var res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:prompt}]})});
+    if(!res.ok){var ed=await res.json().catch(function(){return{};});var em=(ed.error&&ed.error.message)||('HTTP '+res.status);resultEl.innerHTML='<div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:14px;color:var(--red);">❌ Lỗi API: '+esc(em)+'</div>';setStatus('❌ '+em);return;}
+    var data=await res.json();
+    if(data.error){resultEl.innerHTML='<div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:14px;color:var(--red);">❌ '+esc(data.error.message||'Lỗi')+'</div>';setStatus('❌ '+( data.error.message||'Lỗi'));return;}
+    var raw2=(data.content||[]).map(function(b){return b.text||'';}).join('');
+    if(!raw2){resultEl.innerHTML='<div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:10px;padding:14px;">⚠️ AI không trả về kết quả.</div>';setStatus('⚠️ AI không trả về');return;}
+    var parsed=safeParseJSON(raw2);
+    if(parsed.drugs&&parsed.drugs.length>0){setStatus('🔍 Tra cứu '+parsed.drugs.length+' thuốc...');parsed.drugs=await lookupDrugs(parsed.drugs);}
+    pendingNote=Object.assign({},parsed,{videoTitle:title||parsed.subject,channel:channelName,savedAt:Date.now(),id:Date.now()});
+    window._currentDrugs=parsed.drugs||[];
+    renderResult(parsed,resultEl);
+    switchTab('analyze');
+    setTimeout(function(){resultEl.scrollIntoView({behavior:'smooth',block:'start'});},100);
+    setStatus('✅ Xong! '+(parsed.drugs||[]).length+' thuốc/hoá chất');
+  }catch(err){resultEl.innerHTML='<div style="background:var(--red-bg);border:1.5px solid var(--red);border-radius:10px;padding:14px;color:var(--red);">❌ '+esc(err.message)+'</div>';setStatus('❌ '+err.message);}
+}
+
+async function lookupDrugs(drugList){
+  var prompt='Dược sĩ thú y. Bổ sung thông tin ngắn cho danh sách thuốc. Chỉ JSON mảng thuần.\n'+JSON.stringify(drugList)+'\nBổ sung: "active_ingredient","withdrawal_days"(số nguyên),"storage". Không biết để "".';
+  try{
+    var r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:800,messages:[{role:'user',content:prompt}]})});
+    var d=await r.json();var raw=(d.content||[]).map(function(b){return b.text||'';}).join('');
+    return safeParseJSON(raw);
+  }catch(e){return drugList;}
+}
+
+function safeParseJSON(raw){
+  raw=raw.replace(/```json|```/g,'').trim();
+  try{return JSON.parse(raw);}catch(e){}
+  var f=raw.replace(/,\s*$/,'');
+  var op=(f.match(/\[/g)||[]).length-(f.match(/\]/g)||[]).length;
+  var ob=(f.match(/\{/g)||[]).length-(f.match(/\}/g)||[]).length;
+  if((f.match(/"/g)||[]).length%2!==0)f+='"';
+  for(var i=0;i<op;i++)f+=']';for(var j=0;j<ob;j++)f+='}';
+  try{return JSON.parse(f);}catch(e2){return{subject:'Phân tích video',species:'',stage:'',summary:'AI đã phân tích nhưng kết quả bị cắt. Thử rút ngắn transcript.',source_type:'yt',process:[],feed:[],drugs:[],warnings:['Transcript quá dài, vui lòng rút ngắn'],tips:[],source_url:''};}
+}
+
+// ===== RENDER RESULT =====
+function renderResult(d,el){
+  var savedNames=drugs.map(function(x){return(x.name||'').toLowerCase();});
+  var isFb=d.source_type==='fb';
+  var stats=[];
+  if(d.process&&d.process.length)d.process.slice(0,2).forEach(function(p){if(p.time)stats.push({icon:'📅',lbl:'Giai đoạn',val:p.time,unit:''}); });
+  if(d.feed&&d.feed.length)d.feed.slice(0,2).forEach(function(f){if(f.amount)stats.push({icon:'🌾',lbl:f.stage||'Thức ăn',val:f.amount,unit:f.product||''});});
+  if(d.drugs&&d.drugs.length)stats.push({icon:'💊',lbl:'Thuốc dùng',val:d.drugs.length+' loại',unit:''});
+  stats=stats.slice(0,4);
+  var statsHTML=stats.map(function(s){return '<div class="stat-box"><div class="stat-icon">'+s.icon+'</div><div class="stat-lbl">'+esc(s.lbl)+'</div><div class="stat-val">'+esc(String(s.val))+' <span class="stat-unit">'+esc(s.unit)+'</span></div></div>';}).join('');
+  var html='<div class="result-container">';
+  html+='<div class="result-header"><div class="rh-icon">'+(isFb?'📘':'🐄')+'</div><div style="flex:1;"><div class="rh-src">'+(isFb?'FACEBOOK':'YOUTUBE')+' · '+esc((d.species||'CHĂN NUÔI').toUpperCase())+'</div><div class="rh-title">'+esc(d.subject||'Phân tích nội dung')+'</div>'+(d.stage?'<div class="rh-stage">📌 '+esc(d.stage)+'</div>':'')+'<div class="rh-summary">'+esc(d.summary||'')+'</div></div></div>';
+  if(statsHTML)html+='<div class="stats-wrap"><div class="stats-head">📊 <span>SỐ LIỆU CHÍNH</span></div><div class="stat-grid">'+statsHTML+'</div></div>';
+  if(d.process&&d.process.length)html+='<div class="rsec"><div class="rsec-head green"><div class="rsec-icon">📅</div><div class="rsec-title">Quy Trình & Lịch Trình</div></div><div class="rsec-body"><div class="tl">'+d.process.map(function(p){return '<div class="tl-item"><div class="tl-dot"></div><div class="tl-head">⏱ '+esc(p.time)+'</div><div class="tl-body"><strong>'+esc(p.action)+'</strong>'+(p.detail?' — '+esc(p.detail):'')+'</div></div>';}).join('')+'</div></div></div>';
+  if(d.feed&&d.feed.length)html+='<div class="rsec"><div class="rsec-head amber"><div class="rsec-icon">🌾</div><div class="rsec-title">Thức Ăn & Khẩu Phần</div></div><div class="rsec-body" style="overflow-x:auto;"><table class="dtable"><thead><tr><th>GIAI ĐOẠN</th><th>SẢN PHẨM</th><th>KHẨU PHẦN</th><th>GHI CHÚ</th></tr></thead><tbody>'+d.feed.map(function(f){return '<tr><td>'+esc(f.stage)+'</td><td style="font-weight:600;color:var(--p800);">'+esc(f.product)+'</td><td>'+esc(f.amount)+'</td><td style="font-style:italic;color:var(--t3);">'+esc(f.note)+'</td></tr>';}).join('')+'</tbody></table></div></div>';
+  if(d.drugs&&d.drugs.length)html+='<div class="rsec"><div class="rsec-head purple"><div class="rsec-icon">💊</div><div class="rsec-title">Thuốc & Hoá Chất ('+d.drugs.length+')</div><button class="btn btn-drug btn-xs" onclick="saveAllDrugs()" style="margin-left:auto;">💾 Tất cả</button></div><div class="rsec-body">'+d.drugs.map(function(drug,i){return '<div class="drug-card '+(drug.warning?'warn-card':'')+'"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;"><div><div class="drug-name">💊 '+esc(drug.name)+'</div><span class="drug-tag">'+esc(drug.type||'Thuốc')+'</span>'+(drug.target_species?'<span class="drug-tag">'+esc(drug.target_species)+'</span>':'')+(drug.route?'<span class="drug-tag">'+esc(drug.route)+'</span>':'')+'</div><button class="btn btn-drug btn-xs" id="sbtn-'+i+'" onclick="saveDrug('+i+')">'+(savedNames.indexOf((drug.name||'').toLowerCase())>=0?'✅':'💾')+'</button></div><div class="drug-info">'+(drug.purpose?'<p><strong>Mục đích:</strong> '+esc(drug.purpose)+'</p>':'')+(drug.dose?'<p><strong>Liều dùng:</strong> '+esc(drug.dose)+'</p>':'')+(drug.active_ingredient?'<p><strong>Hoạt chất:</strong> '+esc(drug.active_ingredient)+'</p>':'')+(drug.withdrawal_days!==undefined&&drug.withdrawal_days!==''?'<p><strong>Ngừng giết mổ:</strong> '+(drug.withdrawal_days===0||drug.withdrawal_days==='0'?'Không cần':drug.withdrawal_days+' ngày')+'</p>':'')+(drug.warning?'<p style="color:var(--warn);"><strong>⚠️</strong> '+esc(drug.warning)+'</p>':'')+'</div></div>';}).join('')+'</div></div>';
+  if(d.warnings&&d.warnings.length)html+='<div style="background:var(--warn-bg);border:1.5px solid var(--warn-border);border-radius:10px;padding:12px 14px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:2px;color:var(--warn);margin-bottom:8px;font-weight:600;">⚠️ LƯU Ý QUAN TRỌNG</div>'+d.warnings.map(function(w){return '<div style="font-size:13px;line-height:1.7;color:var(--a900);padding:4px 0;border-bottom:1px solid var(--warn-border);">• '+esc(w)+'</div>';}).join('')+'</div>';
+  if(d.tips&&d.tips.length)html+='<div style="background:var(--p100);border:1.5px solid var(--p600);border-radius:10px;padding:12px 14px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:2px;color:var(--p800);margin-bottom:8px;font-weight:600;">💡 MẸO THỰC TẾ</div>'+d.tips.map(function(t){return '<div style="font-size:13px;line-height:1.7;color:var(--p900);padding:4px 0;border-bottom:1px solid var(--p500);">✓ '+esc(t)+'</div>';}).join('')+'</div>';
+  html+='<div style="display:flex;gap:8px;"><button class="btn btn-green btn-block" onclick="saveNote()" style="flex:1;">💾 Lưu ghi chú</button>'+(d.source_url?'<a href="'+esc(d.source_url)+'" target="_blank" class="btn btn-dark btn-sm" style="text-decoration:none;">🔗</a>':'')+'</div>';
+  html+='</div>';el.innerHTML=html;
+}
+
+// ===== DRUG SAVE =====
+function saveDrug(i){
+  var drug=window._currentDrugs[i];if(!drug)return;
+  if(!drugs.find(function(d){return d.name.toLowerCase()===drug.name.toLowerCase();})){
+    var src=activeCh?activeCh.nickname:(pendingNote?pendingNote.channel:'');
+    drugs.unshift(Object.assign({},drug,{savedAt:Date.now(),id:Date.now()+i,source:src}));
+    localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();
+  }
+  var btn=document.getElementById('sbtn-'+i);if(btn){btn.textContent='✅';btn.disabled=true;}
+  setStatus('💾 Đã lưu: '+drug.name);
+}
+function saveAllDrugs(){
+  var count=0;
+  (window._currentDrugs||[]).forEach(function(drug,i){
+    if(!drugs.find(function(d){return d.name.toLowerCase()===drug.name.toLowerCase();})){
+      var src=activeCh?activeCh.nickname:(pendingNote?pendingNote.channel:'');
+      drugs.unshift(Object.assign({},drug,{savedAt:Date.now(),id:Date.now()+i,source:src}));count++;
+    }
+    var btn=document.getElementById('sbtn-'+i);if(btn){btn.textContent='✅';btn.disabled=true;}
+  });
+  localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();
+  setStatus('💾 Đã lưu '+count+' thuốc');
+}
+function saveNote(){
+  if(!pendingNote)return;
+  if(!notes.find(function(n){return n.id===pendingNote.id;}))notes.unshift(pendingNote);
+  localStorage.setItem('yt_notes',JSON.stringify(notes));updateCounts();renderNotes();
+  setStatus('💾 Đã lưu ghi chú!');
+}
+
+// ===== DRUG TABS =====
+function switchDrugTab(tab){
+  ['thucte','giaotrình','sach'].forEach(function(t){
+    var el=document.getElementById('dst-'+t);
+    if(el){el.className='dst '+(t===tab?(t==='thucte'?'act-d':t==='giaotrình'?'act-g':'act-s'):'');}
+  });
+  document.getElementById('drugsContainer').style.display=tab==='thucte'?'':'none';
+  document.getElementById('giaotrinhContainer').style.display=tab==='giaotrình'?'':'none';
+  document.getElementById('sachContainer').style.display=tab==='sach'?'':'none';
+  document.getElementById('btnClearDrugs').style.display=tab==='thucte'?'':'none';
+  if(tab==='giaotrình')renderGiaoTrinh();
+  if(tab==='sach')renderSach();
+}
+function onDrugSearch(){
+  var active=document.getElementById('sachContainer').style.display!=='none'?'sach':document.getElementById('giaotrinhContainer').style.display!=='none'?'giaotrình':'thucte';
+  if(active==='sach')renderSach();else if(active==='giaotrình')renderGiaoTrinh();else renderDrugs();
+}
+
+// ===== RENDER DRUGS (Thực Tế) =====
+function renderDrugs(){
+  var el=document.getElementById('drugsContainer');
+  var q=(document.getElementById('drugSearch').value||'').toLowerCase();
+  var f=drugs.filter(function(d){return(d.name||'').toLowerCase().indexOf(q)>=0||(d.purpose||'').toLowerCase().indexOf(q)>=0||(d.type||'').toLowerCase().indexOf(q)>=0||(d.target_species||'').toLowerCase().indexOf(q)>=0;});
+  if(!f.length){el.innerHTML='<div class="empty"><div class="ei">💊</div><h3>'+(q?'Không tìm thấy':'Kho thuốc trống')+'</h3><p>'+(q?'Thử từ khoá khác.':'Phân tích video có đề cập thuốc và nhấn Lưu.')+'</p></div>';return;}
+  el.innerHTML=f.map(function(d){
+    return '<div class="drug-db-item"><div class="drug-db-head"><div><div class="drug-db-name">💊 '+esc(d.name)+'</div><div class="drug-db-src">'+esc(d.type||'')+' · '+fmtDate(new Date(d.savedAt).toISOString())+'</div>'+(d.source?'<div class="drug-db-src ch">📺 '+esc(d.source)+'</div>':'')+'</div><button class="btn btn-danger btn-xs" onclick="deleteDrug('+d.id+')">✕</button></div>'
+      +'<div class="drug-db-body"><table>'+(d.purpose?'<tr><td>Mục đích</td><td>'+esc(d.purpose)+'</td></tr>':'')+(d.active_ingredient?'<tr><td>Hoạt chất</td><td>'+esc(d.active_ingredient)+'</td></tr>':'')+(d.dose?'<tr><td>Liều dùng</td><td>'+esc(d.dose)+'</td></tr>':'')+(d.withdrawal_days!==undefined&&d.withdrawal_days!==''?'<tr><td>Ngừng thuốc</td><td>'+(d.withdrawal_days===0||d.withdrawal_days==='0'?'Không cần':d.withdrawal_days+' ngày')+'</td></tr>':'')+(d.storage?'<tr><td>Bảo quản</td><td>'+esc(d.storage)+'</td></tr>':'')+'</table></div></div>';
+  }).join('');
+}
+function deleteDrug(id){drugs=drugs.filter(function(d){return d.id!==id;});localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();setStatus('🗑️ Đã xoá');}
+function clearDrugs(){if(!drugs.length||!confirm('Xoá tất cả '+drugs.length+' thuốc?'))return;drugs=[];localStorage.setItem('yt_drugs','[]');updateCounts();renderDrugs();}
+
+// ===== GIAO TRÌNH =====
+var GIAO_TRINH=[
+  {nhom:'Kháng sinh',icon:'💊',thuoc:[
+    {name:'Amoxicillin',purpose:'Nhiễm khuẩn hô hấp, tiêu hoá',dose:'10-20mg/kg/ngày',route:'Tiêm/uống',species:'Heo, gà, bò',note:'Ngừng 7 ngày'},
+    {name:'Tylosin (Tylan)',purpose:'Viêm phổi, hô hấp mãn tính',dose:'8-10mg/kg/ngày',route:'Tiêm bắp',species:'Heo, gà',note:'Ngừng 5 ngày'},
+    {name:'Doxycycline',purpose:'Hô hấp, tiêu chảy',dose:'10mg/kg/ngày',route:'Trộn thức ăn/uống',species:'Heo, gà',note:'Ngừng 7 ngày'},
+    {name:'Enrofloxacin (Baytril)',purpose:'Nhiễm khuẩn toàn thân',dose:'5-10mg/kg/ngày',route:'Tiêm/uống',species:'Heo, gà, bò',note:'Ngừng 10 ngày'},
+    {name:'Colistin',purpose:'Tiêu chảy, nhiễm khuẩn ruột',dose:'50.000-100.000 IU/kg',route:'Trộn thức ăn',species:'Heo, gà',note:'Ngừng 1 ngày'},
+    {name:'Florfenicol',purpose:'Viêm phổi, hô hấp',dose:'20mg/kg/2 ngày',route:'Tiêm bắp',species:'Heo, bò',note:'Ngừng 14-18 ngày'},
+  ]},
+  {nhom:'Vaccine phổ biến',icon:'💉',thuoc:[
+    {name:'Vaccine PRRS',purpose:'Phòng rối loạn sinh sản hô hấp',dose:'1 liều/con',route:'Tiêm bắp',species:'Heo',note:'3-4 tuần tuổi'},
+    {name:'Vaccine Dịch tả heo',purpose:'Phòng dịch tả heo cổ điển',dose:'1 liều/con',route:'Tiêm bắp/dưới da',species:'Heo',note:'3-4 tuần, tái chủng 4-6 tháng'},
+    {name:'Vaccine Lở mồm long móng',purpose:'Phòng LMLM',dose:'2ml/con',route:'Tiêm bắp',species:'Heo, bò, trâu',note:'Tái chủng mỗi 6 tháng'},
+    {name:'Vaccine Newcastle',purpose:'Phòng Newcastle ở gà',dose:'1 giọt/con',route:'Nhỏ mắt mũi',species:'Gà',note:'Ngày 1 tuổi'},
+    {name:'Vaccine Gumboro',purpose:'Phòng Gumboro',dose:'1 liều/con',route:'Nhỏ miệng/uống',species:'Gà',note:'10-14 ngày tuổi'},
+  ]},
+  {nhom:'Vitamin & Khoáng chất',icon:'🔋',thuoc:[
+    {name:'Vitamin C',purpose:'Tăng đề kháng, chống stress nhiệt',dose:'100-200mg/lít nước',route:'Pha nước uống',species:'Tất cả',note:'Dùng khi nóng'},
+    {name:'Điện giải (Electrolyte)',purpose:'Bù điện giải khi tiêu chảy',dose:'Theo hướng dẫn',route:'Pha nước uống',species:'Tất cả',note:'Dùng suốt thời gian bệnh'},
+    {name:'Vitamin B complex',purpose:'Kích thích ăn, hỗ trợ thần kinh',dose:'1ml/10kg',route:'Tiêm/pha nước',species:'Tất cả',note:'An toàn, không cần ngừng'},
+    {name:'ADE (Vitamin A, D, E)',purpose:'Hỗ trợ sinh sản, miễn dịch',dose:'1ml/20-30kg',route:'Tiêm bắp',species:'Heo, bò',note:'1 tháng/lần'},
+  ]},
+  {nhom:'Thuốc ký sinh trùng',icon:'🪱',thuoc:[
+    {name:'Ivermectin',purpose:'Giun sán, ghẻ, ve, rận',dose:'0.3mg/kg',route:'Tiêm dưới da',species:'Heo, bò',note:'Ngừng 14-21 ngày'},
+    {name:'Levamisole',purpose:'Giun tròn đường ruột',dose:'7.5mg/kg',route:'Uống/tiêm',species:'Heo, bò, gà',note:'Ngừng 3 ngày'},
+    {name:'Albendazole',purpose:'Giun sán đường ruột',dose:'10-15mg/kg',route:'Trộn/uống',species:'Heo, bò, gà',note:'Không dùng cho thú mang thai'},
+  ]},
+  {nhom:'Thuốc khử trùng',icon:'🧴',thuoc:[
+    {name:'Formol 37%',purpose:'Khử trùng chuồng trại',dose:'Pha 2-3%',route:'Phun xịt',species:'Môi trường',note:'Để trống chuồng 24h sau phun'},
+    {name:'Virkon S',purpose:'Diệt virus, vi khuẩn, nấm',dose:'Pha 1:200',route:'Phun xịt',species:'Môi trường',note:'An toàn với người và vật'},
+    {name:'Iodine',purpose:'Sát khuẩn vết thương, rốn heo con',dose:'Nguyên chất/pha loãng',route:'Bôi trực tiếp',species:'Tất cả',note:'Dùng hàng ngày'},
+  ]},
+];
+function renderGiaoTrinh(){
+  var el=document.getElementById('giaotrinhContainer');
+  var q=(document.getElementById('drugSearch').value||'').toLowerCase();
+  var html='';
+  GIAO_TRINH.forEach(function(nhom){
+    var f=nhom.thuoc.filter(function(t){return!q||t.name.toLowerCase().indexOf(q)>=0||t.purpose.toLowerCase().indexOf(q)>=0||t.species.toLowerCase().indexOf(q)>=0;});
+    if(!f.length)return;
+    html+='<div style="margin-bottom:16px;"><div style="background:var(--drug);color:white;padding:9px 13px;border-radius:10px 10px 0 0;font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;">'+nhom.icon+' '+nhom.nhom+'</div>';
+    f.forEach(function(t,i){
+      html+='<div style="background:'+(i%2?'#faf9ff':'white')+';border:1px solid var(--drug-border);border-top:none;padding:11px 13px;"><div style="font-family:IBM Plex Mono,monospace;font-size:12.5px;font-weight:600;color:var(--drug);margin-bottom:5px;">💊 '+esc(t.name)+'</div><div style="font-size:12px;line-height:1.8;"><span style="background:var(--drug-bg);color:var(--drug);padding:1px 7px;border-radius:10px;font-size:10px;">'+esc(t.species)+'</span><br><strong>Mục đích:</strong> '+esc(t.purpose)+'<br><strong>Liều dùng:</strong> '+esc(t.dose)+'<br><strong>Đường dùng:</strong> '+esc(t.route)+'<br><span style="color:var(--warn);">⚠️ '+esc(t.note)+'</span></div></div>';
+    });
+    html+='<div style="height:5px;background:var(--drug-bg);border:1px solid var(--drug-border);border-top:none;border-radius:0 0 10px 10px;"></div></div>';
+  });
+  if(!html)html='<div class="empty"><div class="ei">🔍</div><h3>Không tìm thấy</h3></div>';
+  el.innerHTML=html;
+}
+
+// ===== SÁCH (Dược Lý Thú Y) =====
+var SACH=[
+  {nhom:'🐷 Heo — Bệnh Hô Hấp',mota:'Viêm phổi, ho, khó thở, chảy nước mũi',thuoc:[
+    {name:'Tylosin (Tylan)',lieu:'8-10mg/kg/ngày',duong:'Tiêm bắp',thoigian:'5-7 ngày',kethou:'Kết hợp vitamin C',luuy:'Ngừng 5 ngày trước giết mổ'},
+    {name:'Tiamulin',lieu:'10-15mg/kg/ngày',duong:'Trộn thức ăn',thoigian:'5-7 ngày',kethou:'Kết hợp điện giải',luuy:'Không dùng cùng Monensin'},
+    {name:'Florfenicol',lieu:'20mg/kg/2 ngày',duong:'Tiêm bắp',thoigian:'2 mũi cách 2 ngày',kethou:'',luuy:'Ngừng 14-18 ngày trước giết mổ'},
+    {name:'Enrofloxacin',lieu:'5-10mg/kg/ngày',duong:'Tiêm bắp/uống',thoigian:'5-7 ngày',kethou:'',luuy:'Ngừng 10 ngày. Không dùng nái mang thai'},
+  ]},
+  {nhom:'🐷 Heo — Tiêu Chảy & Đường Ruột',mota:'Tiêu chảy phân lỏng/máu, mất nước, bỏ ăn',thuoc:[
+    {name:'Colistin',lieu:'50.000-100.000 IU/kg',duong:'Trộn thức ăn/uống',thoigian:'5 ngày',kethou:'Kết hợp điện giải',luuy:'Ngừng 1 ngày. Ưu tiên heo con'},
+    {name:'Amoxicillin',lieu:'10-20mg/kg/ngày',duong:'Tiêm bắp/uống',thoigian:'5-7 ngày',kethou:'Kết hợp men tiêu hóa',luuy:'Ngừng 7 ngày'},
+    {name:'Neomycin',lieu:'10-20mg/kg/ngày',duong:'Uống/trộn thức ăn',thoigian:'5 ngày',kethou:'',luuy:'Không dùng tiêm — độc thận'},
+    {name:'Điện giải',lieu:'Theo hướng dẫn',duong:'Pha nước uống',thoigian:'Suốt thời gian bệnh',kethou:'Dùng kèm kháng sinh',luuy:'Bổ sung liên tục'},
+  ]},
+  {nhom:'🐷 Heo — Sinh Sản & Heo Nái',mota:'Sảy thai, đẻ khó, viêm tử cung, mất sữa',thuoc:[
+    {name:'Oxytocin',lieu:'10-20 IU/con',duong:'Tiêm bắp',thoigian:'1 lần khi đẻ',kethou:'',luuy:'Chỉ dùng khi cổ tử cung đã mở'},
+    {name:'Penicillin + Streptomycin',lieu:'20.000 IU/kg + 20mg/kg',duong:'Tiêm bắp',thoigian:'5-7 ngày',kethou:'',luuy:'Viêm tử cung sau đẻ'},
+    {name:'PGF2α (Lutalyse)',lieu:'5-10mg/con',duong:'Tiêm bắp',thoigian:'1 lần',kethou:'',luuy:'Kích thích đẻ. Ngừng 24h trước giết mổ'},
+    {name:'Vitamin E + Selenium',lieu:'1ml/10kg',duong:'Tiêm bắp',thoigian:'1 lần/tháng',kethou:'',luuy:'Phòng SMEDI, tăng sinh sản'},
+  ]},
+  {nhom:'🐷 Heo — Ký Sinh Trùng',mota:'Ghẻ, ve, rận, giun sán đường ruột',thuoc:[
+    {name:'Ivermectin',lieu:'0.3mg/kg',duong:'Tiêm dưới da',thoigian:'1 mũi, lặp sau 14 ngày',kethou:'',luuy:'Ngừng 21 ngày. Không dùng nái mang thai <45 ngày'},
+    {name:'Doramectin',lieu:'0.3mg/kg',duong:'Tiêm bắp',thoigian:'1 mũi',kethou:'',luuy:'Ngừng 70 ngày'},
+    {name:'Albendazole',lieu:'10-15mg/kg',duong:'Trộn thức ăn',thoigian:'1-3 ngày',kethou:'',luuy:'Không dùng nái mang thai 45 ngày đầu'},
+  ]},
+  {nhom:'🐔 Gà — Bệnh Hô Hấp (CRD)',mota:'Khò khè, chảy nước mắt mũi, sưng mặt',thuoc:[
+    {name:'Tylosin',lieu:'0.5g/lít nước',duong:'Pha nước uống',thoigian:'5-7 ngày',kethou:'Kết hợp Doxycycline',luuy:'Hiệu quả với Mycoplasma'},
+    {name:'Doxycycline',lieu:'10-20mg/kg/ngày',duong:'Pha nước uống',thoigian:'5-7 ngày',kethou:'',luuy:'Ngừng 7 ngày. Không dùng nước cứng'},
+    {name:'Enrofloxacin',lieu:'10mg/kg/ngày',duong:'Pha nước uống',thoigian:'5 ngày',kethou:'',luuy:'Ngừng 10 ngày. Hạn chế dùng'},
+    {name:'Spiramycin',lieu:'50mg/kg/ngày',duong:'Trộn thức ăn',thoigian:'5-7 ngày',kethou:'',luuy:'Trị Mycoplasma. Ngừng 5 ngày'},
+  ]},
+  {nhom:'🐔 Gà — Tiêu Chảy & Cầu Trùng',mota:'Phân xanh/máu, cầu trùng, đầu đen',thuoc:[
+    {name:'Amprolium',lieu:'125-250mg/lít nước',duong:'Pha nước uống',thoigian:'5-7 ngày',kethou:'Kết hợp vitamin K',luuy:'Không kết hợp vitamin B1'},
+    {name:'Toltrazuril (Baycox)',lieu:'25mg/kg',duong:'Pha nước uống',thoigian:'2 ngày',kethou:'',luuy:'Ngừng 18 ngày'},
+    {name:'Metronidazole',lieu:'25-50mg/kg/ngày',duong:'Trộn thức ăn',thoigian:'5-7 ngày',kethou:'',luuy:'Trị đầu đen (Histomonas). Ngừng 5 ngày'},
+  ]},
+  {nhom:'🐔 Gà — Vaccine',mota:'Lịch tiêm phòng chuẩn cho gà',thuoc:[
+    {name:'Vaccine Newcastle (ND)',lieu:'1 giọt/con',duong:'Nhỏ mắt mũi',thoigian:'Ngày 1, nhắc ngày 14 và 28',kethou:'',luuy:'Bảo quản 2-8°C'},
+    {name:'Vaccine Gumboro (IBD)',lieu:'1 liều/con',duong:'Nhỏ miệng/uống',thoigian:'Ngày 10-14, nhắc ngày 21',kethou:'',luuy:'Tránh ánh sáng khi pha'},
+    {name:'Vaccine IB',lieu:'1 giọt/con',duong:'Nhỏ mắt mũi',thoigian:'Ngày 1, nhắc ngày 14',kethou:'Dùng kèm ND',luuy:'Bảo quản -15 đến -20°C'},
+    {name:'Vaccine H5N1',lieu:'0.3-0.5ml/con',duong:'Tiêm dưới da/bắp',thoigian:'21-28 ngày tuổi',kethou:'',luuy:'Bắt buộc theo quy định nhà nước'},
+  ]},
+  {nhom:'🐄 Bò & Trâu — Bệnh Thường Gặp',mota:'Viêm phổi, tiêu chảy, lở mồm long móng',thuoc:[
+    {name:'Oxytetracycline LA',lieu:'20mg/kg',duong:'Tiêm bắp',thoigian:'1 mũi/3 ngày',kethou:'',luuy:'Ngừng 28 ngày'},
+    {name:'Penicillin G',lieu:'20.000-40.000 IU/kg',duong:'Tiêm bắp',thoigian:'2 lần/ngày x 5 ngày',kethou:'Kết hợp Streptomycin',luuy:'Ngừng 4 ngày'},
+    {name:'Vitamin B complex',lieu:'10-20ml/con',duong:'Tiêm bắp',thoigian:'3-5 ngày',kethou:'',luuy:'Hỗ trợ phục hồi, kích thích ăn'},
+  ]},
+  {nhom:'🧴 Khử Trùng Chuồng Trại',mota:'Tiêu độc, khử khuẩn chuồng và dụng cụ',thuoc:[
+    {name:'Formaldehyde 37%',lieu:'Pha 2-3%',duong:'Phun xịt',thoigian:'1 lần/tuần',kethou:'',luuy:'Đeo khẩu trang. Để trống chuồng 24h'},
+    {name:'Virkon S',lieu:'Pha 1:200',duong:'Phun xịt/ngâm dụng cụ',thoigian:'2-3 lần/tuần',kethou:'',luuy:'An toàn với người và vật nuôi'},
+    {name:'Iodine (Cồn Iod 5%)',lieu:'Nguyên chất/pha loãng',duong:'Bôi trực tiếp',thoigian:'Hàng ngày',kethou:'',luuy:'Sát khuẩn rốn heo con, vết thương'},
+    {name:'Chlorine (Clorua vôi)',lieu:'0.5-1g/lít nước',duong:'Phun/khử trùng nước',thoigian:'Hàng ngày',kethou:'',luuy:'Không dùng với kim loại — ăn mòn'},
+  ]},
+];
+function renderSach(){
+  var el=document.getElementById('sachContainer');
+  var q=(document.getElementById('drugSearch').value||'').toLowerCase();
+  var html='<div class="notice notice-ind" style="margin-bottom:12px;">📖 <strong>Nguồn:</strong> Bài giảng Dược Lý Thú Y · Tra cứu theo nhóm bệnh</div>';
+  SACH.forEach(function(nhom){
+    var f=nhom.thuoc.filter(function(t){return!q||t.name.toLowerCase().indexOf(q)>=0||nhom.nhom.toLowerCase().indexOf(q)>=0||nhom.mota.toLowerCase().indexOf(q)>=0;});
+    if(!f.length)return;
+    html+='<div style="margin-bottom:16px;"><div style="background:var(--ind);color:white;padding:10px 13px;border-radius:10px 10px 0 0;"><div style="font-family:IBM Plex Mono,monospace;font-size:11px;font-weight:700;">'+nhom.nhom+'</div><div style="font-size:11px;opacity:0.75;margin-top:2px;">'+esc(nhom.mota)+'</div></div>';
+    f.forEach(function(t,i){
+      html+='<div style="background:'+(i%2?'white':'#f8f9ff')+';border:1px solid var(--ind-border);border-top:none;padding:11px 13px;">'
+        +'<div style="font-family:IBM Plex Mono,monospace;font-size:12.5px;font-weight:600;color:var(--ind);margin-bottom:6px;">💊 '+esc(t.name)+'</div>'
+        +'<div style="font-size:12px;line-height:1.85;">'
+        +'<div>📏 <strong>Liều:</strong> '+esc(t.lieu)+'</div>'
+        +'<div>💉 <strong>Đường dùng:</strong> '+esc(t.duong)+'</div>'
+        +'<div>⏱ <strong>Thời gian:</strong> '+esc(t.thoigian)+'</div>'
+        +(t.kethou?'<div>🔗 <strong>Kết hợp:</strong> '+esc(t.kethou)+'</div>':'')
+        +'<div style="color:var(--warn);margin-top:3px;">⚠️ '+esc(t.luuy)+'</div>'
+        +'</div></div>';
+    });
+    html+='<div style="height:5px;background:var(--ind-bg);border:1px solid var(--ind-border);border-top:none;border-radius:0 0 10px 10px;"></div></div>';
+  });
+  if(html.indexOf('💊')<0)html+='<div class="empty"><div class="ei">🔍</div><h3>Không tìm thấy</h3><p>Thử từ khoá khác.</p></div>';
+  el.innerHTML=html;
+}
+
+// ===== NOTES =====
+function renderNotes(){
+  var el=document.getElementById('notesContainer');
+  var q=(document.getElementById('noteSearch').value||'').toLowerCase();
+  var f=notes.filter(function(n){return(n.videoTitle||'').toLowerCase().indexOf(q)>=0||(n.subject||'').toLowerCase().indexOf(q)>=0||(n.summary||'').toLowerCase().indexOf(q)>=0;});
+  if(!f.length){el.innerHTML='<div class="empty"><div class="ei">📚</div><h3>'+(q?'Không tìm thấy':'Chưa có ghi chú')+'</h3><p>'+(q?'Thử từ khoá khác.':'Phân tích và nhấn Lưu ghi chú.')+'</p></div>';return;}
+  el.innerHTML=f.map(function(n){
+    return '<div class="note-card"><div class="note-head"><div style="flex:1;"><div class="note-title">'+esc(n.videoTitle||n.subject||'Ghi chú')+'</div>'
+      +'<div style="margin-top:3px;">'+(n.source_type==='fb'?'<span class="ntag fb">📘 FB</span>':'<span class="ntag">📺 YT</span>')+(n.species?'<span class="ntag">🐾 '+esc(n.species)+'</span>':'')+(n.drugs&&n.drugs.length?'<span class="ntag drug">💊 '+n.drugs.length+'</span>':'')+'</div>'
+      +'<div class="note-meta">'+esc(n.channel||'')+' · '+fmtDate(new Date(n.savedAt).toISOString())+'</div></div>'
+      +'<button class="btn btn-danger btn-xs" onclick="deleteNote('+n.id+')">✕</button></div>'
+      +'<div class="note-body" id="nb-'+n.id+'">'
+      +(n.summary?'<p style="font-style:italic;margin-bottom:6px;color:var(--t2);">'+esc(n.summary)+'</p>':'')
+      +(n.process&&n.process.length?'<div style="margin-bottom:7px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;color:var(--p700);margin-bottom:4px;font-weight:600;">📅 QUY TRÌNH</div>'+n.process.map(function(p){return '<div style="padding:3px 0;border-bottom:1px solid var(--border2);font-size:12.5px;">⏱ <strong>'+esc(p.time)+'</strong> — '+esc(p.action)+'</div>';}).join('')+'</div>':'')
+      +(n.feed&&n.feed.length?'<div style="margin-bottom:7px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;color:var(--warn);margin-bottom:4px;font-weight:600;">🌾 THỨC ĂN</div>'+n.feed.map(function(f){return '<div style="font-size:12px;padding:2px 0;">'+esc(f.stage)+': <strong>'+esc(f.product)+'</strong> — '+esc(f.amount)+'</div>';}).join('')+'</div>':'')
+      +(n.drugs&&n.drugs.length?'<div style="margin-bottom:7px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;letter-spacing:1px;color:var(--drug);margin-bottom:4px;font-weight:600;">💊 THUỐC DÙNG</div>'+n.drugs.map(function(d){return '<div style="font-size:12px;padding:2px 0;">• <strong>'+esc(d.name)+'</strong>'+(d.purpose?' — '+esc(d.purpose):'')+'</div>';}).join('')+'</div>':'')
+      +(n.warnings&&n.warnings.length?'<div style="background:var(--warn-bg);border-radius:6px;padding:7px 10px;margin-bottom:6px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--warn);font-weight:600;margin-bottom:3px;">⚠️ LƯU Ý</div>'+n.warnings.map(function(w){return '<div style="font-size:12px;padding:1px 0;">• '+esc(w)+'</div>';}).join('')+'</div>':'')
+      +(n.tips&&n.tips.length?'<div style="background:var(--p100);border-radius:6px;padding:7px 10px;"><div style="font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--p800);font-weight:600;margin-bottom:3px;">💡 MẸO</div>'+n.tips.map(function(t){return '<div style="font-size:12px;padding:1px 0;">✓ '+esc(t)+'</div>';}).join('')+'</div>':'')
+      +'</div>'
+      +'<div class="note-foot"><div>'+(n.stage?'<span class="ntag">'+esc(n.stage)+'</span>':'')+'</div>'
+      +'<div style="display:flex;gap:5px;"><button class="btn btn-outline btn-xs" onclick="toggleNote(\''+n.id+'\')">👁 Xem</button>'+(n.source_url?'<a href="'+esc(n.source_url)+'" target="_blank" class="btn btn-dark btn-xs" style="text-decoration:none;">🔗</a>':'')+'</div></div></div>';
+  }).join('');
+}
+function toggleNote(id){
+  var el=document.getElementById('nb-'+id);if(!el)return;
+  var exp=el.classList.contains('expanded');el.classList.toggle('expanded');
+  var btn=el.parentElement.querySelector('[onclick*="toggleNote"]');
+  if(btn)btn.textContent=exp?'👁 Xem':'🔼 Thu';
+  if(!exp)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+}
+function deleteNote(id){notes=notes.filter(function(n){return n.id!==id;});localStorage.setItem('yt_notes',JSON.stringify(notes));updateCounts();renderNotes();setStatus('🗑️ Đã xoá');}
+function clearNotes(){if(!notes.length||!confirm('Xoá tất cả '+notes.length+' ghi chú?'))return;notes=[];localStorage.setItem('yt_notes','[]');updateCounts();renderNotes();}
+
+// ===== UI HELPERS =====
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('active',t.dataset.tab===name);});
+  ['feed','analyze','drugs','notes'].forEach(function(id){var el=document.getElementById('tab-'+id);if(el)el.style.display=id===name?'':'none';});
+}
+function updateCounts(){document.getElementById('noteCount').textContent=notes.length;document.getElementById('drugCount').textContent=drugs.length;}
+function setStatus(msg){document.getElementById('status').textContent=msg;}
+function clearAll(){['vTitle','vUrl','transcript'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('analysisResult').innerHTML='';pendingNote=null;window._currentDrugs=[];toggleCopyBtn();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fmtDate(iso){try{return new Date(iso).toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return '';}}
+</script>
+</body>
+</html>
