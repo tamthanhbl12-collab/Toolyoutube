@@ -186,6 +186,11 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.6; font-size: 13p
 }
 .badge.drug { background: var(--drug2); color: white; }
 
+
+/* ===== SYNC PANEL ===== */
+.sync-panel { background:var(--surface); border:1.5px solid var(--p700); border-radius:12px; padding:13px; margin-bottom:10px; display:none; }
+.sync-panel .plbl { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--p700); letter-spacing:.08em; margin-bottom:8px; }
+#syncStatus { font-size:11px; color:var(--t3); margin-top:6px; min-height:16px; font-family:'IBM Plex Mono',monospace; }
 /* ===== CONTENT ===== */
 .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 .tab-content { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px; background: var(--bg); }
@@ -349,6 +354,8 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.6; font-size: 13p
   background: var(--p900); padding: 5px 16px; flex-shrink: 0;
   display: flex; align-items: center; gap: 6px;
   border-top: 1px solid rgba(255,255,255,0.06);
+  /* Dính sát đáy iPhone — tránh home indicator */
+  padding-bottom: calc(5px + env(safe-area-inset-bottom, 0px));
 }
 .statusbar span { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(255,255,255,0.45); }
 
@@ -443,9 +450,27 @@ textarea { min-height: 110px; resize: vertical; line-height: 1.6; font-size: 13p
           </div>
           <div style="font-size:10px;color:var(--ind);line-height:1.5;">📋 console.cloud.google.com → Enable YouTube Data API v3 → Credentials → API Key</div>
         </div>
+        <!-- SYNC PANEL -->
+        <div class="sync-panel" id="syncPanel">
+          <div class="plbl">☁️ ĐỒNG BỘ DỮ LIỆU (GITHUB GIST)</div>
+          <div class="fg" style="margin-bottom:6px;">
+            <input type="password" id="ghTokenInput" placeholder="ghp_xxxx... (GitHub Token)" style="font-size:12px;" oninput="saveGhToken(this.value.trim())" />
+          </div>
+          <div class="fg" style="margin-bottom:8px;">
+            <input type="text" id="gistIdInput" placeholder="Gist ID (tự tạo khi Upload lần đầu)" style="font-size:12px;" oninput="saveGistId(this.value.trim())" />
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <button class="btn btn-sm" onclick="ghUpload(false)" style="flex:1;background:var(--p800);color:white;">⬆️ Upload</button>
+            <button class="btn btn-sm" onclick="ghDownload(false)" style="flex:1;background:var(--p700);color:white;">⬇️ Download</button>
+            <button class="btn btn-sm" onclick="toggleSyncPanel()" style="background:var(--surface);color:var(--t2);border:1px solid var(--border);">✕</button>
+          </div>
+          <div id="syncStatus"></div>
+          <div style="font-size:10px;color:var(--t3);margin-top:6px;line-height:1.5;">📋 Tạo token tại github.com → Settings → Developer settings → Personal access tokens → Gist scope</div>
+        </div>
         <div class="settings-bar">
           <button class="btn btn-outline btn-xs" onclick="toggleApiPanel()">🔑 Anthropic</button>
           <button class="btn btn-xs" onclick="toggleGooglePanel()" style="background:var(--ind-bg);color:var(--ind);border:1px solid var(--ind-border);">🔍 Google API</button>
+          <button class="btn btn-xs" onclick="toggleSyncPanel()" style="background:var(--p900);color:var(--p400);border:1px solid var(--p700);">☁️ Sync</button>
         </div>
 
         <div class="source-tabs">
@@ -519,19 +544,88 @@ var drugs    = JSON.parse(localStorage.getItem('yt_drugs')||'[]');
 var activeCh = null, pendingNote = null, currentSource = 'yt';
 window._currentDrugs = [];
 
+// ===== GITHUB GIST SYNC =====
+var GIST_KEY='toolyoutube_gist_id', GH_TOKEN_KEY='toolyoutube_gh_token';
+var _syncTimer=null;
+function getGhToken(){return localStorage.getItem(GH_TOKEN_KEY)||'';}
+function saveGhToken(v){if(v)localStorage.setItem(GH_TOKEN_KEY,v);}
+function getGistId(){return localStorage.getItem(GIST_KEY)||'';}
+function saveGistId(v){if(v)localStorage.setItem(GIST_KEY,v);}
+function getLocalData(){return{channels:channels,notes:notes,drugs:drugs,savedAt:Date.now()};}
+function applyRemoteData(d){
+  if(!d)return;
+  if(d.channels&&Array.isArray(d.channels)){channels=d.channels;localStorage.setItem('yt_ch',JSON.stringify(channels));}
+  if(d.notes&&Array.isArray(d.notes)){notes=d.notes;localStorage.setItem('yt_notes',JSON.stringify(notes));}
+  if(d.drugs&&Array.isArray(d.drugs)){drugs=d.drugs;localStorage.setItem('yt_drugs',JSON.stringify(drugs));}
+  renderChannels();renderNotes();renderDrugs();updateCounts();
+}
+async function ghUpload(silent){
+  var token=getGhToken();if(!token){if(!silent)setSyncStatus('⚠️ Chưa nhập GitHub Token');return false;}
+  var gistId=getGistId();
+  var payload={files:{'toolyoutube_data.json':{content:JSON.stringify(getLocalData(),null,2)}}};
+  if(!gistId){payload.description='Toolyoutube Sync Data';payload.public=false;}
+  try{
+    var url=gistId?'https://api.github.com/gists/'+gistId:'https://api.github.com/gists';
+    var r=await fetch(url,{method:gistId?'PATCH':'POST',headers:{'Authorization':'token '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    if(!r.ok){var e=await r.json();if(!silent)setSyncStatus('\u274c L\u1ed7i: '+(e.message||r.status));return false;}
+    var j=await r.json();
+    saveGistId(j.id);
+    var gi=document.getElementById('gistIdInput');if(gi)gi.value=j.id;
+    if(!silent)setSyncStatus('\u2705 \u0110\u00e3 l\u01b0u l\u00ean cloud l\u00fac '+new Date().toLocaleTimeString('vi-VN'));
+    return true;
+  }catch(e){if(!silent)setSyncStatus('\u274c '+e.message);return false;}
+}
+async function ghDownload(silent){
+  var token=getGhToken();var gistId=getGistId();
+  if(!token||!gistId){if(!silent)setSyncStatus('\u26a0\ufe0f Ch\u01b0a c\u1ea5u h\u00ecnh Sync');return false;}
+  try{
+    var r=await fetch('https://api.github.com/gists/'+gistId,{headers:{'Authorization':'token '+token}});
+    if(!r.ok){if(!silent)setSyncStatus('\u274c Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c d\u1eef li\u1ec7u');return false;}
+    var j=await r.json();
+    var f=j.files&&j.files['toolyoutube_data.json'];
+    if(!f){if(!silent)setSyncStatus('\u26a0\ufe0f Kh\u00f4ng t\u00ecm th\u1ea5y file');return false;}
+    var content=f.content;
+    if(f.truncated){var cr=await fetch(f.raw_url);content=await cr.text();}
+    var d=JSON.parse(content);
+    var localTs=parseInt(localStorage.getItem('yt_savedAt')||'0');
+    var remoteTs=d.savedAt||0;
+    if(remoteTs>localTs){
+      applyRemoteData(d);
+      localStorage.setItem('yt_savedAt',remoteTs);
+      if(!silent)setSyncStatus('\u2705 \u0110\u00e3 t\u1ea3i d\u1eef li\u1ec7u m\u1edbi nh\u1ea5t ('+new Date(remoteTs).toLocaleTimeString('vi-VN')+')');
+    } else {
+      if(!silent)setSyncStatus('\u2705 D\u1eef li\u1ec7u \u0111ang l\u00e0 m\u1edbi nh\u1ea5t');
+    }
+    return true;
+  }catch(e){if(!silent)setSyncStatus('\u274c '+e.message);return false;}
+}
+function scheduleUpload(){
+  localStorage.setItem('yt_savedAt',Date.now());
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(function(){ghUpload(true);},2000);
+}
+function setSyncStatus(msg){var el=document.getElementById('syncStatus');if(el)el.textContent=msg;}
+function toggleSyncPanel(){var p=document.getElementById('syncPanel');if(p)p.style.display=(p.style.display==='none'?'':'none');}
+function saveSyncConfig(){
+  var t=document.getElementById('ghTokenInput').value.trim();
+  var g=document.getElementById('gistIdInput').value.trim();
+  saveGhToken(t);saveGistId(g);
+  setSyncStatus('\u2705 \u0110\u00e3 l\u01b0u c\u1ea5u h\u00ecnh');
+}
+
 // ===== INIT =====
-window.addEventListener('load', function() {
-  setTimeout(function() {
-    var s=document.getElementById('splash'); s.style.opacity='0';
-    setTimeout(function(){s.remove();},500);
-  }, 1200);
+window.addEventListener('load',function(){
+  setTimeout(function(){var s=document.getElementById('splash');s.style.opacity='0';setTimeout(function(){s.remove();},500);},1200);
+  setTimeout(function(){ghDownload(true);},1800);
 });
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 var _k=localStorage.getItem('cn_apikey')||'';
-if(_k) document.getElementById('apiKeyInput').value=_k;
+if(_k)document.getElementById('apiKeyInput').value=_k;
 var _gk=localStorage.getItem('google_apikey')||'';
-if(_gk) document.getElementById('googleKeyInput').value=_gk;
-renderChannels(); renderNotes(); renderDrugs(); updateCounts();
+if(_gk)document.getElementById('googleKeyInput').value=_gk;
+var _gt=getGhToken();if(_gt){var _gi=document.getElementById('ghTokenInput');if(_gi)_gi.value=_gt;}
+var _gid=getGistId();if(_gid){var _giid=document.getElementById('gistIdInput');if(_giid)_giid.value=_gid;}
+renderChannels();renderNotes();renderDrugs();updateCounts();
 
 // ===== API KEYS =====
 function getApiKey(){return localStorage.getItem('cn_apikey')||'';}
@@ -621,7 +715,7 @@ function renderChannels(){
   }).join('');
 }
 function selectChByEl(el){selectCh(JSON.parse(el.getAttribute('data-ch')));}
-function saveChannels(){localStorage.setItem('yt_ch',JSON.stringify(channels));}
+function saveChannels(){localStorage.setItem('yt_ch',JSON.stringify(channels));scheduleUpload();}
 
 // ===== FEED =====
 function selectCh(ch){activeCh=ch;renderChannels();switchTab('feed');loadFeed(ch);}
@@ -834,13 +928,13 @@ function saveAllDrugs(){
     }
     var btn=document.getElementById('sbtn-'+i);if(btn){btn.textContent='✅';btn.disabled=true;}
   });
-  localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();
+  localStorage.setItem('yt_drugs',JSON.stringify(drugs));scheduleUpload();updateCounts();renderDrugs();
   setStatus('💾 Đã lưu '+count+' thuốc');
 }
 function saveNote(){
   if(!pendingNote)return;
   if(!notes.find(function(n){return n.id===pendingNote.id;}))notes.unshift(pendingNote);
-  localStorage.setItem('yt_notes',JSON.stringify(notes));updateCounts();renderNotes();
+  localStorage.setItem('yt_notes',JSON.stringify(notes));scheduleUpload();updateCounts();renderNotes();
   setStatus('💾 Đã lưu ghi chú!');
 }
 
@@ -873,8 +967,8 @@ function renderDrugs(){
       +'<div class="drug-db-body"><table>'+(d.purpose?'<tr><td>Mục đích</td><td>'+esc(d.purpose)+'</td></tr>':'')+(d.active_ingredient?'<tr><td>Hoạt chất</td><td>'+esc(d.active_ingredient)+'</td></tr>':'')+(d.dose?'<tr><td>Liều dùng</td><td>'+esc(d.dose)+'</td></tr>':'')+(d.withdrawal_days!==undefined&&d.withdrawal_days!==''?'<tr><td>Ngừng thuốc</td><td>'+(d.withdrawal_days===0||d.withdrawal_days==='0'?'Không cần':d.withdrawal_days+' ngày')+'</td></tr>':'')+(d.storage?'<tr><td>Bảo quản</td><td>'+esc(d.storage)+'</td></tr>':'')+'</table></div></div>';
   }).join('');
 }
-function deleteDrug(id){drugs=drugs.filter(function(d){return d.id!==id;});localStorage.setItem('yt_drugs',JSON.stringify(drugs));updateCounts();renderDrugs();setStatus('🗑️ Đã xoá');}
-function clearDrugs(){if(!drugs.length||!confirm('Xoá tất cả '+drugs.length+' thuốc?'))return;drugs=[];localStorage.setItem('yt_drugs','[]');updateCounts();renderDrugs();}
+function deleteDrug(id){drugs=drugs.filter(function(d){return d.id!==id;});localStorage.setItem('yt_drugs',JSON.stringify(drugs));scheduleUpload();updateCounts();renderDrugs();setStatus('🗑️ Đã xoá');}
+function clearDrugs(){if(!drugs.length||!confirm('Xoá tất cả '+drugs.length+' thuốc?'))return;drugs=[];localStorage.setItem('yt_drugs','[]');scheduleUpload();updateCounts();renderDrugs();}
 
 // ===== GIAO TRÌNH =====
 var GIAO_TRINH=[
@@ -1177,8 +1271,8 @@ function toggleNote(id){
   if(btn)btn.textContent=exp?'👁 Xem':'🔼 Thu';
   if(!exp)setTimeout(function(){el.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
 }
-function deleteNote(id){notes=notes.filter(function(n){return n.id!==id;});localStorage.setItem('yt_notes',JSON.stringify(notes));updateCounts();renderNotes();setStatus('🗑️ Đã xoá');}
-function clearNotes(){if(!notes.length||!confirm('Xoá tất cả '+notes.length+' ghi chú?'))return;notes=[];localStorage.setItem('yt_notes','[]');updateCounts();renderNotes();}
+function deleteNote(id){notes=notes.filter(function(n){return n.id!==id;});localStorage.setItem('yt_notes',JSON.stringify(notes));scheduleUpload();updateCounts();renderNotes();setStatus('🗑️ Đã xoá');}
+function clearNotes(){if(!notes.length||!confirm('Xoá tất cả '+notes.length+' ghi chú?'))return;notes=[];localStorage.setItem('yt_notes','[]');scheduleUpload();updateCounts();renderNotes();}
 
 // ===== UI HELPERS =====
 function switchTab(name){
